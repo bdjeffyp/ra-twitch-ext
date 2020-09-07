@@ -1,6 +1,6 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "ra-twitch-ext",
+  "name": "Retro Achievements Twitch Extension",
   "icons": [
     {
       "src": "favicon.ico",
