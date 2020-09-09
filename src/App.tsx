@@ -3,15 +3,8 @@ import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
 import "./App.css";
 import { Auth } from "./Auth";
 import { Config } from "./Config";
-import Twitch from "./ext-helper";
 import { Main } from "./Main";
-
-// Update the window global to see the Twitch Extension
-declare global {
-  interface Window {
-    Twitch: { ext: Twitch.ext };
-  }
-}
+import { ITwitchAuth, TwitchExtensionHelper } from "./twitch-ext";
 
 export interface IAppState {
   finishedLoading: boolean;
@@ -20,15 +13,17 @@ export interface IAppState {
   apiKey: string;
 }
 
-class App extends React.Component<{}, IAppState> {
+interface IAppProps {}
+
+class App extends React.Component<IAppProps, IAppState> {
   private _version = "0.1.0";
   private _auth: Auth;
-  private _twitch: Twitch.ext | null;
+  private _twitch: TwitchExtensionHelper | undefined;
 
-  constructor() {
-    super({});
+  constructor(props: IAppProps) {
+    super(props);
     this._auth = new Auth();
-    this._twitch = window.Twitch ? window.Twitch.ext : null;
+    this._twitch = window.Twitch ? window.Twitch.ext : undefined;
     this.state = {
       finishedLoading: false,
       config: "",
@@ -41,7 +36,7 @@ class App extends React.Component<{}, IAppState> {
   public componentDidMount() {
     if (this._twitch) {
       // Authenticate
-      this._twitch.onAuthorized((auth: Twitch.IAuth) => {
+      this._twitch.onAuthorized((auth: ITwitchAuth) => {
         this._auth.setToken(auth.token, auth.userId);
         if (!this.state.finishedLoading) {
           this.setState({ finishedLoading: true });
@@ -64,6 +59,7 @@ class App extends React.Component<{}, IAppState> {
         }
 
         this.setState({ config: config });
+        console.log(config);
       });
     }
   }

@@ -1,11 +1,11 @@
 import * as Jwt from "jsonwebtoken";
-import Twitch from "./ext-helper";
+import { Roles } from "./twitch-ext";
 
 interface IAuthState {
   token?: string;
   opaqueId?: string;
   userId?: string;
-  role?: Twitch.Roles;
+  role?: Roles;
   isBroadcaster: boolean;
 }
 
@@ -43,7 +43,7 @@ export class Auth {
    */
   public setToken(token: string, opaqueId: string) {
     let isCaster = false;
-    let userRole = Twitch.Roles.viewer;
+    let userRole = Roles.viewer;
     let userId = "";
     let currentToken: string | undefined = token;
     let currentOpaqueId: string | undefined = opaqueId;
@@ -54,7 +54,7 @@ export class Auth {
         throw "Invalid token";
       }
 
-      if (decoded.role === Twitch.Roles.broadcaster) {
+      if (decoded.role === Roles.broadcaster) {
         isCaster = true;
       }
       userId = decoded.user_id;
