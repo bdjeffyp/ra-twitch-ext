@@ -51,7 +51,7 @@ export class Auth {
     try {
       const decoded = Jwt.decode(token);
       if (!decoded || typeof decoded !== "object") {
-        throw "Invalid token";
+        throw new Error("Invalid token");
       }
 
       if (decoded.role === Roles.broadcaster) {
