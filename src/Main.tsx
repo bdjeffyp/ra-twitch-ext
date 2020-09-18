@@ -8,12 +8,14 @@ interface IMainState {
   failstate: boolean;
   errorMessage: string;
   title: string;
+  lastGameUrl: string;
   userPicUrl: string;
   username: string;
   rank: string;
   points: string;
   retroPoints: string;
   recentAchievements: IAchievement[];
+  richPresenceMessage: string;
 }
 
 export class Main extends React.Component<IAppConfig, IMainState> {
@@ -32,12 +34,14 @@ export class Main extends React.Component<IAppConfig, IMainState> {
       failstate: false,
       errorMessage: "",
       title: "",
+      lastGameUrl: "",
       userPicUrl: "",
       username: "",
       rank: "",
       points: "",
       retroPoints: "",
       recentAchievements: [],
+      richPresenceMessage: "",
     };
   }
 
@@ -100,24 +104,47 @@ export class Main extends React.Component<IAppConfig, IMainState> {
 
             {this.state.recentAchievements.length > 0 && (
               <Stack>
-                Recent achievement(s):
-                {this.state.recentAchievements.map((item: IAchievement, index: number) => {
-                  return (
-                    <div key={index} style={Styles.achievementContainerStyle()}>
-                      <Stack horizontal>
-                        <img
-                          src={item.badgeUrl}
-                          alt={item.title + " achievement"}
-                          style={Styles.achievementBadgeStyle(item.hardcoreAchieved)}
-                        />
+                {/* Rich Presence Message */}
+                <div style={Styles.richPresenceContainerStyle()}>
+                  <div>
+                    <span>Last seen playing: </span>
+                    <a href={this.state.lastGameUrl} target="_blank" rel="noopener noreferrer" style={Styles.lastGameTitleStyle()}>
+                      {this.state.title}
+                    </a>
+                  </div>
+                  <div>{this.state.richPresenceMessage}</div>
+                </div>
+                {/* Recent achievements */}
+                <div>
+                  Recent achievement(s):
+                  {this.state.recentAchievements.map((item: IAchievement, index: number) => {
+                    const points = item.points > 1 ? `${item.points} points` : `${item.points} point`;
+                    return (
+                      <a
+                        key={index}
+                        href={RA_URL + "/Achievement/" + item.id}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={Styles.achievementLinkStyle()}
+                      >
+                        <div style={Styles.achievementContainerStyle()}>
+                          <Stack horizontal>
+                            <img
+                              src={item.badgeUrl}
+                              alt={item.title + " achievement"}
+                              style={Styles.achievementBadgeStyle(item.hardcoreAchieved)}
+                            />
 
-                        <Stack>
-                          <div style={Styles.achievementTitleStyle()}>{item.title}</div>
-                        </Stack>
-                      </Stack>
-                    </div>
-                  );
-                })}
+                            <Stack>
+                              <div style={Styles.achievementTitleStyle()}>{item.title}</div>
+                              <div>{points}</div>
+                            </Stack>
+                          </Stack>
+                        </div>
+                      </a>
+                    );
+                  })}
+                </div>
               </Stack>
             )}
             {this.state.recentAchievements.length === 0 && <Stack>No achievements earned recently...</Stack>}
@@ -149,13 +176,18 @@ export class Main extends React.Component<IAppConfig, IMainState> {
 
       this.setState({
         title: response.recentlyPlayed[0].title,
+        lastGameUrl: `${RA_URL}/Game/${response.lastGameId}`,
         userPicUrl: response.userPicUrl,
         username: response.username,
         rank: response.rank,
         points: response.totalPoints,
         retroPoints: response.totalTruePoints,
         recentAchievements: achievements,
+        richPresenceMessage: response.richPresenceMsg,
       });
     });
+
+    // Set the interval to call this again in one minute!
+    setTimeout(this._userSummary, 60000);
   };
 }
