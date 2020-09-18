@@ -18,8 +18,8 @@ export const profileContainerStyle = (): React.CSSProperties => {
 
 export const profileImageStyle = (): React.CSSProperties => {
   return {
-    width: "64px",
-    height: "64px",
+    width: "calc(60px + 4vmin)",
+    height: "calc(60px + 4vmin)",
     paddingRight: "5px",
   };
 };
@@ -34,12 +34,20 @@ export const profileNameStyle = (): React.CSSProperties => {
   return {
     textDecorationLine: "none",
     color: goldColor,
+    cursor: "pointer",
   };
 };
 
 export const retroRatioPointsStyle = (): React.CSSProperties => {
   return {
     color: "white",
+  };
+};
+
+export const richPresenceContainerStyle = (): React.CSSProperties => {
+  return {
+    fontSize: "calc(8px + 2vmin)",
+    marginBottom: "1vmin",
   };
 };
 
@@ -55,8 +63,8 @@ export const achievementContainerStyle = (): React.CSSProperties => {
 
 export const achievementBadgeStyle = (isHardcore: boolean): React.CSSProperties => {
   return {
-    width: "64px",
-    height: "64px",
+    width: "calc(32px + 4vmin)",
+    height: "calc(32px + 4vmin)",
     border: "2px solid",
     borderColor: isHardcore ? goldColor : "transparent",
     marginRight: "5px",
@@ -66,5 +74,21 @@ export const achievementBadgeStyle = (isHardcore: boolean): React.CSSProperties 
 export const achievementTitleStyle = (): React.CSSProperties => {
   return {
     color: goldColor,
+  };
+};
+
+export const achievementLinkStyle = (): React.CSSProperties => {
+  return {
+    textDecorationLine: "none",
+    cursor: "pointer",
+    color: lightBlueColor,
+  };
+};
+
+export const lastGameTitleStyle = (): React.CSSProperties => {
+  return {
+    color: goldColor,
+    textDecorationLine: "none",
+    cursor: "pointer",
   };
 };
