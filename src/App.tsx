@@ -1,8 +1,7 @@
 import * as React from "react";
-import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
 import "./App.css";
 import { Auth } from "./Auth";
-import { Config, EMPTY_CONFIG } from "./Config";
+import { EMPTY_CONFIG } from "./Config";
 import { Main } from "./Main";
 import { ITwitchAuth, TwitchExtensionHelper } from "./twitch-ext";
 
@@ -62,18 +61,9 @@ class App extends React.Component<IAppProps, IAppState> {
   public render() {
     return (
       <div className="App">
-        <Router>
-          <Switch>
-            <Route path="/config">
-              <Config />
-            </Route>
-            <Route path="/">
-              {this.state.finishedLoading && (
-                <Main username={this.state.username} apiKey={this.state.apiKey} numAchievementsToShow={this.state.numAchievementsToShow} />
-              )}
-            </Route>
-          </Switch>
-        </Router>
+        {this.state.finishedLoading && (
+          <Main username={this.state.username} apiKey={this.state.apiKey} numAchievementsToShow={this.state.numAchievementsToShow} />
+        )}
       </div>
     );
   }
