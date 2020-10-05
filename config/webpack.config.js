@@ -125,38 +125,43 @@ module.exports = function (webpackEnv) {
 
   return {
     mode: isEnvProduction ? "production" : isEnvDevelopment && "development",
+    devServer: {
+      writeToDisk: true,
+    },
     // Stop compilation early in production
     bail: isEnvProduction,
     devtool: isEnvProduction ? (shouldUseSourceMap ? "source-map" : false) : isEnvDevelopment && "cheap-module-source-map",
     // These are the "entry points" to our application.
     // This means they will be the "root" imports that are included in JS bundle.
-    entry: [
-      // Include an alternative client for WebpackDevServer. A client's job is to
-      // connect to WebpackDevServer by a socket and get notified about changes.
-      // When you save a file, the client will either apply hot updates (in case
-      // of CSS changes), or refresh the page (in case of JS changes). When you
-      // make a syntax error, this client will display a syntax error overlay.
-      // Note: instead of the default WebpackDevServer client, we use a custom one
-      // to bring better experience for Create React App users. You can replace
-      // the line below with these two lines if you prefer the stock client:
-      // require.resolve('webpack-dev-server/client') + '?/',
-      // require.resolve('webpack/hot/dev-server'),
-      isEnvDevelopment && require.resolve("react-dev-utils/webpackHotDevClient"),
-      // Finally, this is your app's code:
-      paths.appIndexJs,
-      paths.appConfig,
-      // We include the app code last so that if there is a runtime error during
-      // initialization, it doesn't blow up the WebpackDevServer client, and
-      // changing JS code would still trigger a refresh.
-    ].filter(Boolean),
+    entry: {
+      index: [
+        // Include an alternative client for WebpackDevServer. A client's job is to
+        // connect to WebpackDevServer by a socket and get notified about changes.
+        // When you save a file, the client will either apply hot updates (in case
+        // of CSS changes), or refresh the page (in case of JS changes). When you
+        // make a syntax error, this client will display a syntax error overlay.
+        // Note: instead of the default WebpackDevServer client, we use a custom one
+        // to bring better experience for Create React App users. You can replace
+        // the line below with these two lines if you prefer the stock client:
+        // require.resolve('webpack-dev-server/client') + '?/',
+        // require.resolve('webpack/hot/dev-server'),
+        isEnvDevelopment && require.resolve("react-dev-utils/webpackHotDevClient"),
+        // Finally, this is your app's code:
+        paths.appIndexJs,
+        // We include the app code last so that if there is a runtime error during
+        // initialization, it doesn't blow up the WebpackDevServer client, and
+        // changing JS code would still trigger a refresh.
+      ].filter(Boolean),
+      config: [isEnvDevelopment && require.resolve("react-dev-utils/webpackHotDevClient"), paths.appConfig].filter(Boolean),
+    },
     output: {
       // The build folder.
-      path: isEnvProduction ? paths.appBuild : undefined,
+      path: isEnvProduction ? paths.appBuild : isEnvDevelopment && paths.appWatch,
       // Add /* filename */ comments to generated require()s in the output.
       pathinfo: isEnvDevelopment,
       // There will be one main bundle, and one file per asynchronous chunk.
       // In development, it does not produce real files.
-      filename: isEnvProduction ? "static/js/[name].[contenthash:8].js" : isEnvDevelopment && "static/js/bundle.js",
+      filename: isEnvProduction ? "static/js/[name].[contenthash:8].js" : isEnvDevelopment && "static/js/[name].bundle.js",
       // TODO: remove this when upgrading to webpack 5
       futureEmitAssets: true,
       // There are also additional JS chunk files if you use code splitting.
@@ -478,7 +483,7 @@ module.exports = function (webpackEnv) {
       ],
     },
     plugins: [
-      // Generates an `index.html` file with the <script> injected.
+      // Generates an `index.html` file with the <script> not injected.
       new HtmlWebpackPlugin(
         Object.assign(
           {},
@@ -486,6 +491,8 @@ module.exports = function (webpackEnv) {
             // Twitch Extensions cannot have minified code in their HTML files
             inject: false,
             template: paths.appHtml,
+            chunks: ["index"],
+            filename: "index.html",
           },
           isEnvProduction
             ? {
@@ -505,7 +512,7 @@ module.exports = function (webpackEnv) {
             : undefined
         )
       ),
-      // Generates a `config.html` file with the <script> injected.
+      // Generates a `config.html` file with the <script> not injected.
       new HtmlWebpackPlugin(
         Object.assign(
           {},
@@ -513,6 +520,8 @@ module.exports = function (webpackEnv) {
             // Twitch Extensions cannot have minified code in their HTML files
             inject: false,
             template: paths.appConfigHtml,
+            chunks: ["config"],
+            filename: "config.html",
           },
           isEnvProduction
             ? {
@@ -583,7 +592,13 @@ module.exports = function (webpackEnv) {
             manifest[file.name] = file.path;
             return manifest;
           }, seed);
-          const entrypointFiles = entrypoints.main.filter((fileName) => !fileName.endsWith(".map"));
+          let entrypointFiles = [];
+          // for (const key in entrypoints) {
+          //   entrypointFiles = entrypoints[key].filter((fileName) => !fileName.endsWith(".map"));
+          // }
+          Object.values(entrypoints).forEach(
+            (points) => (entrypointFiles = entrypointFiles.concat(points.filter((fileName) => !fileName.endsWith(".map"))))
+          );
 
           return {
             files: manifestFiles,
