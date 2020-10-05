@@ -56,7 +56,7 @@ export class Main extends React.Component<IAppConfig, IMainState> {
         rankText = "Unranked";
       } else {
         rankText = ` | ${this.state.rank}`;
-        const onesDigit = this.state.rank.charAt(this.state.rank.length);
+        const onesDigit = this.state.rank.charAt(this.state.rank.length - 1);
         switch (onesDigit) {
           case "1":
             rankText += "st";

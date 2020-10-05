@@ -1,6 +1,9 @@
+import { Stack } from "@fluentui/react";
 import * as React from "react";
 import { APP_VERSION, IAppConfig } from "./App";
 import { Auth } from "./Auth";
+import * as Styles from "./Config.style";
+import { RA_URL } from "./ra-api";
 import { ConfigSegments, ITwitchAuth, TwitchExtensionHelper } from "./twitch-ext";
 
 interface IConfigState {
@@ -9,6 +12,7 @@ interface IConfigState {
   numAchievementsToShow: number;
   finishedLoading: boolean;
 }
+interface IConfigProps {}
 
 enum Fields {
   username = "username",
@@ -22,13 +26,13 @@ export const EMPTY_CONFIG: IAppConfig = {
   numAchievementsToShow: 0,
 };
 
-export class Config extends React.Component<{}, IConfigState> {
+export class Config extends React.Component<IConfigProps, IConfigState> {
   private _auth: Auth;
   private _twitch: TwitchExtensionHelper | undefined;
   private _currentNumAchievements = "";
 
-  constructor(_ = {}) {
-    super({});
+  constructor(props: IConfigProps) {
+    super(props);
     this._auth = new Auth();
     this._twitch = window.Twitch ? window.Twitch.ext : undefined;
     this.state = {
@@ -65,28 +69,79 @@ export class Config extends React.Component<{}, IConfigState> {
   }
 
   public render() {
-    // TODO: STYLING!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     // TODO: Validate the numAchievementsToShow field! Disable button if invalid!
     return (
-      <div>
-        <label htmlFor={Fields.username}>Retro Achievements Username: </label>
-        <input id={Fields.username} type="text" name={Fields.username} value={this.state.username} onChange={this._onInputChange} />
-        <br />
-        <label htmlFor={Fields.apiKey}>Retro Achievements API Key: </label>
-        <input id={Fields.apiKey} type="text" name={Fields.apiKey} value={this.state.apiKey} onChange={this._onInputChange} />
-        <br />
-        <label htmlFor={Fields.numAchievementsToShow}>Number of recent achievements to show: </label>
-        <input
-          id={Fields.numAchievementsToShow}
-          type="text"
-          name={Fields.numAchievementsToShow}
-          value={this._currentNumAchievements}
-          onChange={this._onInputChange}
-        />
-        <br />
-        <button type="submit" onClick={this._saveConfig}>
+      <div style={Styles.configContainerStyle()}>
+        <div style={Styles.instructionsStyle()}>
+          To display this extension, you need to provide your Retro Achievements username and API key. Go to{" "}
+          <a href={`${RA_URL}/controlpanel.php`} target="_blank" rel="noopener noreferrer" style={Styles.linkStyle()}>
+            your Retro Achievements settings page
+          </a>{" "}
+          to find the API key and copy-paste it. These values are encrypted and stored with Twitch.
+        </div>
+        <Stack horizontal style={Styles.optionsStackStyle()}>
+          <div>
+            <div style={Styles.labelStyle()}>
+              <label htmlFor={Fields.username}>Retro Achievements Username: </label>
+            </div>
+            <div style={Styles.labelStyle()}>
+              <label htmlFor={Fields.apiKey}>Retro Achievements API Key: </label>
+            </div>
+            {/* TODO: Currently hiding the number of achievements to show as I don't think I want it... */}
+            {/* <div style={Styles.labelStyle()}>
+              <label htmlFor={Fields.numAchievementsToShow}>Recent achievements to show: </label>
+            </div> */}
+          </div>
+          <div style={Styles.inputStackStyle()}>
+            <div>
+              <input
+                id={Fields.username}
+                type="text"
+                name={Fields.username}
+                value={this.state.username}
+                onChange={this._onInputChange}
+                style={Styles.inputStyle()}
+              />
+            </div>
+            <div>
+              {/* While it is bad practice to set a value into a password field, the API key isn't really a password, per se... */}
+              {/* We allow it here as the key is available in plaintext on Retro Achievements for the specific user. */}
+              {/* That specific user can only see the value here as well, since they copy-paste it here. */}
+              <input
+                id={Fields.apiKey}
+                type="password"
+                name={Fields.apiKey}
+                value={this.state.apiKey}
+                onChange={this._onInputChange}
+                style={Styles.inputStyle()}
+              />
+            </div>
+            {/* <div>
+              <input
+                id={Fields.numAchievementsToShow}
+                type="text"
+                name={Fields.numAchievementsToShow}
+                value={this._currentNumAchievements}
+                onChange={this._onInputChange}
+                style={Styles.inputStyle()}
+              />
+            </div> */}
+          </div>
+        </Stack>
+        <button type="submit" onClick={this._saveConfig} style={Styles.inputStyle()}>
           Save
         </button>
+        <div style={Styles.footerStyle()}>
+          Retro Achievements Streamer Stats extension created by{" "}
+          <a href="https://github.com/bdjeffyp" target="_blank" rel="noopener noreferrer" style={Styles.linkStyle()}>
+            Jeff Peterson (bdjeffyp)
+          </a>
+          <br />
+          Report issues/bugs/happiness with the extension{" "}
+          <a href="https://github.com/bdjeffyp/ra-twitch-ext/issues" target="_blank" rel="noopener noreferrer" style={Styles.linkStyle()}>
+            here
+          </a>
+        </div>
       </div>
     );
   }
