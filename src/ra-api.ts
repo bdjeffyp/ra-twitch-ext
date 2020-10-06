@@ -241,10 +241,13 @@ export class RetroAchievementsApi extends Api {
   };
 
   public getSummary = async (count: number): Promise<IUserSummary> => {
-    // TODO: What is the "a" param??
-    const params = `u=${this._username}&g=${count.toString()}&a=5`;
+    // g = number of games to look at
+    // a = number of achievements per game
+    // Must have a value at g to get valid data!
+    const params = `u=${this._username}&g=${count}&a=${count}`;
     return await this.get<IGetUserSummaryResponseData>(this._raUrl(ApiTargets.userSummary, params))
       .then((response: AxiosResponse<IGetUserSummaryResponseData>) => {
+        // TODO: THIS NEEDS BETTER ERROR HANDLING AND TESTING FOR THE PRESENCE OF FIELDS!!!!!!!!!!
         const data = response.data;
         // Validate the response for the invalid apiKey error
         if ((response.data as unknown) === INVALID_KEY_ERROR) {
