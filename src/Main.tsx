@@ -157,7 +157,11 @@ export class Main extends React.Component<IAppConfig, IMainState> {
   private _userSummary = () => {
     // Get data from the number of games equivalent to number achievements user wants to show
     // If each game only has one recent achievement, then we are still getting the right number of achievements to show.
-    this._ra.getSummary(this.props.numAchievementsToShow).then((response: IUserSummary) => {
+
+    // TODO: Since I disabled the recent achievements count, I need to ensure that the default of five is shown.
+    const count = this.props.numAchievementsToShow === 0 ? 5 : this.props.numAchievementsToShow;
+
+    this._ra.getSummary(count).then((response: IUserSummary) => {
       if (response.hasErrorResponse) {
         return this.setState({ failstate: true, errorMessage: response.errorMessage });
       }
