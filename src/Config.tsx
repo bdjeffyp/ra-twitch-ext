@@ -11,6 +11,7 @@ interface IConfigState {
   apiKey: string;
   numAchievementsToShow: number;
   finishedLoading: boolean;
+  changesSavedIndicator: boolean;
 }
 interface IConfigProps {}
 
@@ -40,6 +41,7 @@ export class Config extends React.Component<IConfigProps, IConfigState> {
       apiKey: "",
       numAchievementsToShow: 0,
       finishedLoading: false,
+      changesSavedIndicator: false,
     };
   }
 
@@ -99,6 +101,7 @@ export class Config extends React.Component<IConfigProps, IConfigState> {
                 type="text"
                 name={Fields.username}
                 value={this.state.username}
+                onClick={this._onInputClick}
                 onChange={this._onInputChange}
                 style={Styles.inputStyle()}
               />
@@ -112,6 +115,7 @@ export class Config extends React.Component<IConfigProps, IConfigState> {
                 type="password"
                 name={Fields.apiKey}
                 value={this.state.apiKey}
+                onClick={this._onInputClick}
                 onChange={this._onInputChange}
                 style={Styles.inputStyle()}
               />
@@ -131,6 +135,9 @@ export class Config extends React.Component<IConfigProps, IConfigState> {
         <button type="submit" onClick={this._saveConfig} style={Styles.inputStyle()}>
           Save
         </button>
+        <span style={Styles.changesSavedIndicatorStyle()} hidden={!this.state.changesSavedIndicator}>
+          Saved!
+        </span>
         <div style={Styles.footerStyle()}>
           Retro Achievements Streamer Stats extension created by{" "}
           <a href="https://github.com/bdjeffyp" target="_blank" rel="noopener noreferrer" style={Styles.linkStyle()}>
@@ -145,6 +152,10 @@ export class Config extends React.Component<IConfigProps, IConfigState> {
       </div>
     );
   }
+
+  private _onInputClick = () => {
+    this.setState({ changesSavedIndicator: false });
+  };
 
   private _onInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const target = event.target;
@@ -186,6 +197,7 @@ export class Config extends React.Component<IConfigProps, IConfigState> {
     };
     if (this._twitch) {
       this._twitch.configuration.set(ConfigSegments.broadcaster, APP_VERSION, JSON.stringify(config));
+      this.setState({ changesSavedIndicator: true });
     } else {
       // TODO: Display some sort of error on the config page...
       console.log("Twitch extension helper is not loaded...");
