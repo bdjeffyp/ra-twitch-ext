@@ -243,7 +243,7 @@ export class RetroAchievementsApi extends Api {
   public getSummary = async (count: number): Promise<IUserSummary> => {
     // g = number of games to look at
     // a = number of achievements per game
-    // Must have a value at g to get valid data!
+    // Must have a non-zero value at g to get valid data!
     const params = `u=${this._username}&g=${count}&a=${count}`;
     return await this.get<IGetUserSummaryResponseData>(this._raUrl(ApiTargets.userSummary, params))
       .then((response: AxiosResponse<IGetUserSummaryResponseData>) => {
