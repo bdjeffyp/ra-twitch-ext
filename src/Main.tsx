@@ -1,4 +1,5 @@
 import { Stack } from "@fluentui/react";
+import DayJs from "dayjs";
 import * as React from "react";
 import { IAppConfig } from "./App";
 import * as Styles from "./Main.style";
@@ -174,8 +175,11 @@ export class Main extends React.Component<IAppConfig, IMainState> {
             achievements.push(response.recentAchievements[gameId][id]);
           });
         });
+        // Achievements from the API call are not in a particular order. Sort them by the date field, placing the newest at the top.
+        achievements.sort((a: IAchievement, b: IAchievement) => (DayJs(a.dateAwarded).isBefore(DayJs(b.dateAwarded)) ? 1 : -1));
+
         // Put in order from newest to oldest
-        achievements.reverse();
+        // achievements.reverse();
       }
 
       this.setState({
