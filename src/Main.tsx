@@ -1,4 +1,5 @@
-import { Stack } from "@fluentui/react";
+import { Spinner, SpinnerSize, Stack } from "@fluentui/react";
+import DayJs from "dayjs";
 import * as React from "react";
 import { IAppConfig } from "./App";
 import * as Styles from "./Main.style";
@@ -16,6 +17,7 @@ interface IMainState {
   retroPoints: string;
   recentAchievements: IAchievement[];
   richPresenceMessage: string;
+  initialLoading: boolean;
 }
 
 export class Main extends React.Component<IAppConfig, IMainState> {
@@ -42,6 +44,7 @@ export class Main extends React.Component<IAppConfig, IMainState> {
       retroPoints: "",
       recentAchievements: [],
       richPresenceMessage: "",
+      initialLoading: true,
     };
   }
 
@@ -77,8 +80,11 @@ export class Main extends React.Component<IAppConfig, IMainState> {
 
     return (
       <div style={Styles.mainContainerStyle()}>
-        {this.state.failstate && <div>{this.state.errorMessage + " - Refresh the page"}</div>}
-        {!this.state.failstate && (
+        {this.state.initialLoading && !this.state.failstate && (
+          <Spinner size={SpinnerSize.large} label="Loading" style={Styles.loadingSpinnerStyle()}></Spinner>
+        )}
+        {!this.state.initialLoading && this.state.failstate && <div>{this.state.errorMessage + " - Refresh the page"}</div>}
+        {!this.state.initialLoading && !this.state.failstate && (
           <>
             <Stack style={Styles.profileContainerStyle()}>
               <Stack horizontal>
@@ -105,14 +111,14 @@ export class Main extends React.Component<IAppConfig, IMainState> {
             {this.state.recentAchievements.length > 0 && (
               <Stack>
                 {/* Rich Presence Message */}
-                <div style={Styles.richPresenceContainerStyle()}>
+                <div>
                   <div>
                     <span>Last seen playing: </span>
                     <a href={this.state.lastGameUrl} target="_blank" rel="noopener noreferrer" style={Styles.lastGameTitleStyle()}>
                       {this.state.title}
                     </a>
                   </div>
-                  <div>{this.state.richPresenceMessage}</div>
+                  <div style={Styles.richPresenceContainerStyle()}>{this.state.richPresenceMessage}</div>
                 </div>
                 {/* Recent achievements */}
                 <div>
@@ -174,8 +180,11 @@ export class Main extends React.Component<IAppConfig, IMainState> {
             achievements.push(response.recentAchievements[gameId][id]);
           });
         });
+        // Achievements from the API call are not in a particular order. Sort them by the date field, placing the newest at the top.
+        achievements.sort((a: IAchievement, b: IAchievement) => (DayJs(a.dateAwarded).isBefore(DayJs(b.dateAwarded)) ? 1 : -1));
+
         // Put in order from newest to oldest
-        achievements.reverse();
+        // achievements.reverse();
       }
 
       this.setState({
@@ -188,6 +197,7 @@ export class Main extends React.Component<IAppConfig, IMainState> {
         retroPoints: response.totalTruePoints,
         recentAchievements: achievements,
         richPresenceMessage: response.richPresenceMsg,
+        initialLoading: false,
       });
     });
 

@@ -54,6 +54,14 @@ export const linkStyle = (): React.CSSProperties => {
   };
 };
 
+export const changesSavedIndicatorStyle = (): React.CSSProperties => {
+  return {
+    position: "relative",
+    top: "2px",
+    left: "6px",
+  };
+};
+
 export const footerStyle = (): React.CSSProperties => {
   return {
     fontSize: "calc(4px + 1vmin)",

@@ -11,6 +11,8 @@ interface IConfigState {
   apiKey: string;
   numAchievementsToShow: number;
   finishedLoading: boolean;
+  changesSavedIndicator: boolean;
+  saveButtonEnabled: boolean;
 }
 interface IConfigProps {}
 
@@ -40,6 +42,8 @@ export class Config extends React.Component<IConfigProps, IConfigState> {
       apiKey: "",
       numAchievementsToShow: 0,
       finishedLoading: false,
+      changesSavedIndicator: false,
+      saveButtonEnabled: false,
     };
   }
 
@@ -87,10 +91,9 @@ export class Config extends React.Component<IConfigProps, IConfigState> {
             <div style={Styles.labelStyle()}>
               <label htmlFor={Fields.apiKey}>Retro Achievements API Key: </label>
             </div>
-            {/* TODO: Currently hiding the number of achievements to show as I don't think I want it... */}
-            {/* <div style={Styles.labelStyle()}>
+            <div style={Styles.labelStyle()}>
               <label htmlFor={Fields.numAchievementsToShow}>Recent achievements to show: </label>
-            </div> */}
+            </div>
           </div>
           <div style={Styles.inputStackStyle()}>
             <div>
@@ -99,6 +102,7 @@ export class Config extends React.Component<IConfigProps, IConfigState> {
                 type="text"
                 name={Fields.username}
                 value={this.state.username}
+                onClick={this._onInputClick}
                 onChange={this._onInputChange}
                 style={Styles.inputStyle()}
               />
@@ -112,25 +116,30 @@ export class Config extends React.Component<IConfigProps, IConfigState> {
                 type="password"
                 name={Fields.apiKey}
                 value={this.state.apiKey}
+                onClick={this._onInputClick}
                 onChange={this._onInputChange}
                 style={Styles.inputStyle()}
               />
             </div>
-            {/* <div>
+            <div>
               <input
                 id={Fields.numAchievementsToShow}
                 type="text"
                 name={Fields.numAchievementsToShow}
                 value={this._currentNumAchievements}
+                onClick={this._onInputClick}
                 onChange={this._onInputChange}
                 style={Styles.inputStyle()}
               />
-            </div> */}
+            </div>
           </div>
         </Stack>
-        <button type="submit" onClick={this._saveConfig} style={Styles.inputStyle()}>
+        <button type="submit" disabled={!this.state.saveButtonEnabled} onClick={this._saveConfig} style={Styles.inputStyle()}>
           Save
         </button>
+        <span style={Styles.changesSavedIndicatorStyle()} hidden={!this.state.changesSavedIndicator}>
+          Saved!
+        </span>
         <div style={Styles.footerStyle()}>
           Retro Achievements Streamer Stats extension created by{" "}
           <a href="https://github.com/bdjeffyp" target="_blank" rel="noopener noreferrer" style={Styles.linkStyle()}>
@@ -146,9 +155,14 @@ export class Config extends React.Component<IConfigProps, IConfigState> {
     );
   }
 
+  private _onInputClick = () => {
+    this.setState({ changesSavedIndicator: false });
+  };
+
   private _onInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const target = event.target;
     const name = target.name;
+    let validCount = false;
 
     switch (name) {
       case Fields.username:
@@ -161,20 +175,25 @@ export class Config extends React.Component<IConfigProps, IConfigState> {
         this._currentNumAchievements = target.value;
         // Validate the currentNumAchievements
         if (isNaN(parseInt(this._currentNumAchievements))) {
-          // Change the value to 5 if we don't know what this is
-          this._currentNumAchievements = "5";
-          this.setState({ numAchievementsToShow: 5 });
+          validCount = false;
           break;
         }
-        // TODO: Determine actual max value. I believe it is 5, but I'm not 100%. Also, 10 is probably a healthy max for the extension.
+        // TODO: Determine actual max value. 30 seems good so far...
         let value = parseInt(this._currentNumAchievements);
-        if (value > 5) {
-          value = 5;
-        } else if (value < 1) {
-          value = 1;
+        if (value > 30 || value < 1) {
+          validCount = false;
+          break;
         }
         this.setState({ numAchievementsToShow: value });
+        validCount = true;
         break;
+    }
+
+    // Validate and activate save button, if able
+    if (this.state.username !== "" && this.state.apiKey !== "" && validCount) {
+      this.setState({ saveButtonEnabled: true });
+    } else {
+      this.setState({ saveButtonEnabled: false });
     }
   };
 
@@ -186,6 +205,7 @@ export class Config extends React.Component<IConfigProps, IConfigState> {
     };
     if (this._twitch) {
       this._twitch.configuration.set(ConfigSegments.broadcaster, APP_VERSION, JSON.stringify(config));
+      this.setState({ changesSavedIndicator: true });
     } else {
       // TODO: Display some sort of error on the config page...
       console.log("Twitch extension helper is not loaded...");
