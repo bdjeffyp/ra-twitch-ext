@@ -10,6 +10,15 @@ export const mainContainerStyle = (): React.CSSProperties => {
   };
 };
 
+export const loadingSpinnerStyle = (): React.CSSProperties => {
+  return {
+    position: "absolute",
+    top: "50%",
+    left: "50%",
+    transform: "translate(-50%, -50%)",
+  };
+};
+
 export const profileContainerStyle = (): React.CSSProperties => {
   return {
     paddingBottom: "5px",
@@ -46,7 +55,7 @@ export const retroRatioPointsStyle = (): React.CSSProperties => {
 
 export const richPresenceContainerStyle = (): React.CSSProperties => {
   return {
-    fontSize: "calc(8px + 2vmin)",
+    fontSize: "calc(6px + 2vmin)",
     marginBottom: "1vmin",
   };
 };
