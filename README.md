@@ -1,6 +1,8 @@
 # Retro Achievements Twitch Extension
 
 An extension for Twitch that displays the streamer's information from Retro Achievements.
+Version 1.1.0 released October 16, 2020 on the [Twitch Extensions Page](https://dashboard.twitch.tv/extensions/h2bgu1pjhgehu4zrf4fc02cnastgri-1.1.0).
+Feel free to use this project as a base for other Twitch panel extensions!
 
 ## Installation
 
