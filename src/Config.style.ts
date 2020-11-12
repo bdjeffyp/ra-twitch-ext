@@ -1,12 +1,15 @@
+import { ICalloutContentStyles, ITextFieldStyles } from "@fluentui/react";
 import * as React from "react";
 
 const goldColor = "#CC9900";
 const lightBlueColor = "#2C97FA";
+const redWarningColor = "#FF2020";
+const lightGrayColor = "#282c34";
 
 export const configContainerStyle = (): React.CSSProperties => {
   return {
     padding: "1em",
-    backgroundColor: "#282c34",
+    backgroundColor: lightGrayColor,
     // 100% of the viewport height minus the top and bottom padding
     minHeight: "calc(100vh - 2em)",
     fontSize: "calc(8px + 2vmin)",
@@ -29,6 +32,12 @@ export const optionsStackStyle = (): React.CSSProperties => {
 
 export const labelStyle = (): React.CSSProperties => {
   return {
+    marginRight: "0.5em",
+  };
+};
+
+export const oldLabelStyle = (): React.CSSProperties => {
+  return {
     // Add the buffer to the top that the inputs add in order to align the labels with the text boxes
     paddingTop: "2px",
   };
@@ -40,7 +49,53 @@ export const inputStackStyle = (): React.CSSProperties => {
   };
 };
 
-export const inputStyle = (): React.CSSProperties => {
+export const validationStackStyle = (): React.CSSProperties => {
+  return {
+    marginLeft: "0.5em",
+  };
+};
+
+export const inputStyle = (width: string, textFieldError?: boolean): Partial<ITextFieldStyles> => {
+  return {
+    field: { width: width, fontSize: "calc(4px + 2vmin)" },
+    fieldGroup: [textFieldError && { borderColor: redWarningColor }],
+    errorMessage: {
+      color: redWarningColor,
+    },
+  };
+};
+
+export const apiKeyCalloutStyle = (): Partial<ICalloutContentStyles> => {
+  return {
+    root: {
+      maxWidth: "332px",
+      border: "1px solid darkgoldenrod",
+    },
+    calloutMain: {
+      padding: "5px",
+      backgroundColor: lightGrayColor,
+      color: lightBlueColor,
+    },
+    beak: {
+      backgroundColor: lightGrayColor,
+    },
+  };
+};
+
+export const apiKeyCalloutHeaderStyle = (): React.CSSProperties => {
+  return {
+    textAlign: "center",
+    paddingBottom: "0.5em",
+  };
+};
+
+export const calloutQuoteStyle = (): React.CSSProperties => {
+  return {
+    color: goldColor,
+  };
+};
+
+export const buttonInputStyle = (): React.CSSProperties => {
   return {
     fontSize: "calc(4px + 2vmin)",
   };

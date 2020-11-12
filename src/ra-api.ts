@@ -214,6 +214,11 @@ export class RetroAchievementsApi extends Api {
     return await fetch(this._raUrl(ApiTargets.gameList, param), this._fetchOptions);
   };
 
+  /**
+   * This might be a dead API. The call failed.
+   * @param count
+   * @param offset
+   */
   public getFeed = async (count: number, offset: number) => {
     const params = `u=${this._username}&c=${count.toString()}&o=${offset.toString()}`;
     return await fetch(this._raUrl(ApiTargets.feed, params), this._fetchOptions);

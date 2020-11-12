@@ -167,6 +167,18 @@ export class Main extends React.Component<IAppConfig, IMainState> {
     // TODO: Since I disabled the recent achievements count, I need to ensure that the default of five is shown.
     const count = this.props.numAchievementsToShow === 0 ? 5 : this.props.numAchievementsToShow;
 
+    // Making other calls to see what the data responses are
+    // this._ra.getConsoleIds();
+    // this._ra.getExtendedGameInfo("504");
+    // this._ra.getFeed(5, 0); // failed...
+    // this._ra.getGameInfo("504");
+    // this._ra.getGamesList("4");
+    // this._ra.getProgress("504");
+    // this._ra.getRankAndScore();
+    // this._ra.getRecentGames(5, 0);
+    // this._ra.getTopTenUsers();
+    // this._ra.getUserGameProgress("504");
+
     this._ra.getSummary(count).then((response: IUserSummary) => {
       if (response.hasErrorResponse) {
         return this.setState({ failstate: true, errorMessage: response.errorMessage });
