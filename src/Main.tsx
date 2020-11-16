@@ -88,7 +88,7 @@ export class Main extends React.Component<IAppConfig, IMainState> {
           <>
             <Stack style={Styles.profileContainerStyle()}>
               <Stack horizontal>
-                <img src={this.state.userPicUrl} alt="Streamer's Retro Achievements profile" style={Styles.profileImageStyle()} />
+                <img src={this.state.userPicUrl} alt="Streamer's Retro Achievements profile photo" style={Styles.profileImageStyle()} />
 
                 <Stack>
                   <div>
@@ -170,7 +170,7 @@ export class Main extends React.Component<IAppConfig, IMainState> {
     // Making other calls to see what the data responses are
     // this._ra.getConsoleIds();
     // this._ra.getExtendedGameInfo("504");
-    // this._ra.getFeed(5, 0); // failed...
+    // this._ra.getFeed(5, 0); // failed... doesn't seem to be supported any more
     // this._ra.getGameInfo("504");
     // this._ra.getGamesList("4");
     // this._ra.getProgress("504");
