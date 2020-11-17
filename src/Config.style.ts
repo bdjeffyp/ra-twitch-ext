@@ -1,4 +1,4 @@
-import { ICalloutContentStyles, ITextFieldStyles } from "@fluentui/react";
+import { ICalloutContentStyles, ICheckboxStyles, ITextFieldStyles } from "@fluentui/react";
 import * as React from "react";
 
 const goldColor = "#CC9900";
@@ -36,10 +36,10 @@ export const labelStyle = (): React.CSSProperties => {
   };
 };
 
-export const oldLabelStyle = (): React.CSSProperties => {
+export const horizontalRuleStyle = (): React.CSSProperties => {
   return {
-    // Add the buffer to the top that the inputs add in order to align the labels with the text boxes
-    paddingTop: "2px",
+    borderColor: lightBlueColor,
+    borderStyle: "solid",
   };
 };
 
@@ -95,17 +95,28 @@ export const calloutQuoteStyle = (): React.CSSProperties => {
   };
 };
 
-export const buttonInputStyle = (): React.CSSProperties => {
-  return {
-    fontSize: "calc(4px + 2vmin)",
-  };
-};
-
 export const linkStyle = (): React.CSSProperties => {
   return {
     color: goldColor,
     textDecorationLine: "none",
     cursor: "pointer",
+  };
+};
+
+export const checkboxStyle = (): Partial<ICheckboxStyles> => {
+  return {
+    text: {
+      color: lightBlueColor,
+    },
+    // checkmark: {
+    //   color: "white",
+    // },
+  };
+};
+
+export const buttonInputStyle = (): React.CSSProperties => {
+  return {
+    fontSize: "calc(4px + 2vmin)",
   };
 };
 

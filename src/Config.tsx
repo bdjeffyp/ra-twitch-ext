@@ -1,4 +1,4 @@
-import { Callout, DirectionalHint, Stack, TextField } from "@fluentui/react";
+import { Callout, Checkbox, DirectionalHint, Stack, TextField } from "@fluentui/react";
 import * as React from "react";
 import { Auth } from "./Auth";
 import * as Styles from "./Config.style";
@@ -6,6 +6,13 @@ import blankKeyImage from "./img/BlankKey.png";
 import { DEFAULT_ACHIEVEMENT_COUNT, DEFAULT_CONFIG, EXT_CONFIG_KEY, Fields, IAppConfig, MAX_ACHIEVEMENTS_TO_SHOW } from "./models";
 import { RA_URL } from "./ra-api";
 import { ConfigSegments, ITwitchAuth, TwitchExtensionHelper } from "./twitch-ext";
+
+enum ConfigCheckboxes {
+  userProfile = "User profile",
+  lastGamePlaying = "Last seen playing",
+  richPresence = "Rich presence",
+  recentAchievements = "Recent achievements list",
+}
 
 interface IConfigState extends IAppConfig {
   achievementsToShow: string;
@@ -67,6 +74,7 @@ export class Config extends React.Component<IConfigProps, IConfigState> {
     return (
       <>
         <div style={Styles.configContainerStyle()}>
+          {/* Instructions section */}
           <div style={Styles.instructionsStyle()}>
             To display this extension, you need to provide your Retro Achievements username and API key. Go to{" "}
             <a href={`${RA_URL}/controlpanel.php`} target="_blank" rel="noopener noreferrer" style={Styles.linkStyle()}>
@@ -74,6 +82,7 @@ export class Config extends React.Component<IConfigProps, IConfigState> {
             </a>{" "}
             to find the API key and copy-paste it. These values are encrypted and stored with Twitch.
           </div>
+          {/* Username */}
           <Stack horizontal style={Styles.optionsStackStyle()}>
             <label htmlFor={Fields.username} style={Styles.labelStyle()}>
               Retro Achievements Username:
@@ -89,6 +98,7 @@ export class Config extends React.Component<IConfigProps, IConfigState> {
               styles={Styles.inputStyle("14em", this._usernameTextFieldError)}
             />
           </Stack>
+          {/* API Key */}
           <Stack horizontal style={Styles.optionsStackStyle()}>
             <label htmlFor={Fields.apiKey} style={Styles.labelStyle()}>
               Retro Achievements API Key:
@@ -109,6 +119,7 @@ export class Config extends React.Component<IConfigProps, IConfigState> {
               styles={Styles.inputStyle("15.4em", this._apiKeyTextFieldError)}
             />
           </Stack>
+          {/* Number of achievements to show */}
           <Stack horizontal style={Styles.optionsStackStyle()}>
             <label htmlFor={Fields.numAchievementsToShow} style={Styles.labelStyle()}>
               Recent achievements to show:
@@ -125,12 +136,23 @@ export class Config extends React.Component<IConfigProps, IConfigState> {
               styles={Styles.inputStyle("14.55em", this._numAchievementsTextFieldError)}
             />
           </Stack>
+          <hr style={Styles.horizontalRuleStyle()} />
+          {/* Configure panel appearance */}
+          Select which sections to display:
+          <Checkbox
+            label={ConfigCheckboxes.userProfile}
+            checked={this.state.showUserProfile}
+            onChange={() => this._onCheckChanged(ConfigCheckboxes.userProfile)}
+            styles={Styles.checkboxStyle()}
+          />
+          {/* Save button and status */}
           <button type="submit" disabled={!this.state.saveButtonEnabled} onClick={this._saveConfig} style={Styles.buttonInputStyle()}>
             Save
           </button>
           <span style={Styles.changesSavedIndicatorStyle()} hidden={!this.state.changesSavedIndicator}>
             Saved!
           </span>
+          {/* Footer */}
           <div style={Styles.footerStyle()}>
             Retro Achievements Streamer Stats extension created by{" "}
             <a href="https://github.com/bdjeffyp" target="_blank" rel="noopener noreferrer" style={Styles.linkStyle()}>
@@ -235,6 +257,23 @@ export class Config extends React.Component<IConfigProps, IConfigState> {
 
   private _updateSaveButtonEnabledState = (hasError: boolean) => {
     this.setState({ saveButtonEnabled: !hasError });
+  };
+
+  private _onCheckChanged = (configItem: ConfigCheckboxes) => {
+    switch (configItem) {
+      case ConfigCheckboxes.userProfile:
+        this.setState({ showUserProfile: !this.state.showUserProfile });
+        break;
+      case ConfigCheckboxes.lastGamePlaying:
+        this.setState({ showLastGamePlaying: !this.state.showLastGamePlaying });
+        break;
+      case ConfigCheckboxes.richPresence:
+        this.setState({ showRichPresenceMessage: !this.state.showRichPresenceMessage });
+        break;
+      case ConfigCheckboxes.recentAchievements:
+        this.setState({ showRecentAchievementList: !this.state.showRecentAchievementList });
+        break;
+    }
   };
 
   private _saveConfig = () => {

@@ -1,9 +1,11 @@
+import { initializeIcons } from "@fluentui/react";
 import React from "react";
 import ReactDom from "react-dom";
 import App from "./App";
 import "./index.css";
 import * as serviceWorker from "./serviceWorker";
 
+initializeIcons();
 ReactDom.render(<App />, document.getElementById("root"));
 
 // If you want your app to work offline and load faster, you can change
