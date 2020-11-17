@@ -53,10 +53,15 @@ export const retroRatioPointsStyle = (): React.CSSProperties => {
   };
 };
 
+export const lastGamePlayingContainerStyle = (): React.CSSProperties => {
+  return {
+    marginBottom: "1vmin",
+  };
+};
+
 export const richPresenceContainerStyle = (): React.CSSProperties => {
   return {
     fontSize: "calc(6px + 2vmin)",
-    marginBottom: "1vmin",
   };
 };
 

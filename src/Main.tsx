@@ -18,6 +18,10 @@ interface IMainState {
   recentAchievements: IAchievement[];
   richPresenceMessage: string;
   initialLoading: boolean;
+  showUserProfile: boolean;
+  showLastGamePlaying: boolean;
+  showRichPresenceMessage: boolean;
+  showRecentAchievementList: boolean;
 }
 
 export class Main extends React.Component<IAppConfig, IMainState> {
@@ -45,14 +49,49 @@ export class Main extends React.Component<IAppConfig, IMainState> {
       recentAchievements: [],
       richPresenceMessage: "",
       initialLoading: true,
+      showUserProfile: true,
+      showLastGamePlaying: true,
+      showRichPresenceMessage: true,
+      showRecentAchievementList: true,
     };
   }
 
   public componentDidMount() {
+    // Get the data for the panel from Retro Achievements and kick off the periodic fetching sequence
     this._userSummary();
   }
 
   public render() {
+    return (
+      <div style={Styles.mainContainerStyle()}>
+        {this.state.initialLoading && !this.state.failstate && (
+          <Spinner size={SpinnerSize.large} label="Loading" style={Styles.loadingSpinnerStyle()}></Spinner>
+        )}
+        {!this.state.initialLoading && this.state.failstate && <div>{this.state.errorMessage + " - Refresh the page"}</div>}
+        {!this.state.initialLoading && !this.state.failstate && (
+          <>
+            {/* TODO: Remove test mode header */}
+            Test Mode!!!
+            {this.state.showUserProfile && this._renderUserProfileInfo()}
+            {this.state.showLastGamePlaying && this._renderLastGamePlaying()}
+            {this.state.showRecentAchievementList && this._renderRecentAchievements()}
+          </>
+        )}
+      </div>
+    );
+  }
+
+  /**
+   * Renders the basic Retro Achievements profile information like so:
+   *
+   * PHOTO  UserName | Ranking
+   *
+   * PHOTO  Points
+   *
+   * PHOTO  Retro Ratio points
+   */
+  private _renderUserProfileInfo = () => {
+    // Create formatted text string for the user's Retro Achievements standing
     let rankText = "";
     if (this.state.rank) {
       if (this.state.rank === "0") {
@@ -79,92 +118,97 @@ export class Main extends React.Component<IAppConfig, IMainState> {
     }
 
     return (
-      <div style={Styles.mainContainerStyle()}>
-        {this.state.initialLoading && !this.state.failstate && (
-          <Spinner size={SpinnerSize.large} label="Loading" style={Styles.loadingSpinnerStyle()}></Spinner>
-        )}
-        {!this.state.initialLoading && this.state.failstate && <div>{this.state.errorMessage + " - Refresh the page"}</div>}
-        {!this.state.initialLoading && !this.state.failstate && (
-          <>
-            <Stack style={Styles.profileContainerStyle()}>
-              <Stack horizontal>
-                <img src={this.state.userPicUrl} alt="Streamer's Retro Achievements profile photo" style={Styles.profileImageStyle()} />
+      <Stack style={Styles.profileContainerStyle()}>
+        <Stack horizontal>
+          {/* Profile pic. Note that alt text doesn't need the word "photo" in it. */}
+          <img src={this.state.userPicUrl} alt="Streamer's Retro Achievements profile" style={Styles.profileImageStyle()} />
 
-                <Stack>
-                  <div>
-                    <a
-                      href={RA_URL + "/user/" + this.state.username}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={Styles.profileNameStyle()}
-                    >
-                      {this.state.username}
-                    </a>
-                    <span>{rankText}</span>
-                  </div>
-                  <div>{this.state.points} points</div>
-                  <div style={Styles.retroRatioPointsStyle()}>{this.state.retroPoints} Retro Ratio points</div>
-                </Stack>
-              </Stack>
-            </Stack>
-
-            {this.state.recentAchievements.length > 0 && (
-              <Stack>
-                {/* Rich Presence Message */}
-                <div>
-                  <div>
-                    <span>Last seen playing: </span>
-                    <a href={this.state.lastGameUrl} target="_blank" rel="noopener noreferrer" style={Styles.lastGameTitleStyle()}>
-                      {this.state.title}
-                    </a>
-                  </div>
-                  <div style={Styles.richPresenceContainerStyle()}>{this.state.richPresenceMessage}</div>
-                </div>
-                {/* Recent achievements */}
-                <div>
-                  Recent achievement(s):
-                  {this.state.recentAchievements.map((item: IAchievement, index: number) => {
-                    const points = item.points > 1 ? `${item.points} points` : `${item.points} point`;
-                    return (
-                      <a
-                        key={index}
-                        href={RA_URL + "/Achievement/" + item.id}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={Styles.achievementLinkStyle()}
-                      >
-                        <div style={Styles.achievementContainerStyle()}>
-                          <Stack horizontal>
-                            <img
-                              src={item.badgeUrl}
-                              alt={item.title + " achievement"}
-                              style={Styles.achievementBadgeStyle(item.hardcoreAchieved)}
-                            />
-
-                            <Stack>
-                              <div style={Styles.achievementTitleStyle()}>{item.title}</div>
-                              <div>{points}</div>
-                            </Stack>
-                          </Stack>
-                        </div>
-                      </a>
-                    );
-                  })}
-                </div>
-              </Stack>
-            )}
-            {this.state.recentAchievements.length === 0 && <Stack>No achievements earned recently...</Stack>}
-          </>
-        )}
-      </div>
+          <Stack>
+            <div>
+              {/* Username and rank */}
+              <a href={RA_URL + "/user/" + this.state.username} target="_blank" rel="noopener noreferrer" style={Styles.profileNameStyle()}>
+                {this.state.username}
+              </a>
+              <span>{rankText}</span>
+            </div>
+            {/* Points earned */}
+            <div>{this.state.points} points</div>
+            <div style={Styles.retroRatioPointsStyle()}>{this.state.retroPoints} Retro Ratio points</div>
+          </Stack>
+        </Stack>
+      </Stack>
     );
-  }
+  };
+
+  /**
+   * Renders the information about the last game the user has played as well as rich presence data
+   */
+  private _renderLastGamePlaying = () => {
+    return (
+      <Stack style={Styles.lastGamePlayingContainerStyle()}>
+        <div>
+          <span>Last seen playing: </span>
+          <a href={this.state.lastGameUrl} target="_blank" rel="noopener noreferrer" style={Styles.lastGameTitleStyle()}>
+            {this.state.title}
+          </a>
+        </div>
+        {/* Rich Presence Message is optional within the Last Game Playing */}
+        {this.state.showRichPresenceMessage && <div style={Styles.richPresenceContainerStyle()}>{this.state.richPresenceMessage}</div>}
+      </Stack>
+    );
+  };
+
+  /**
+   * Renders the list of recent achievements or displays a message if none have been earned recently
+   */
+  private _renderRecentAchievements = () => {
+    return (
+      <>
+        {this.state.recentAchievements.length > 0 && (
+          <Stack>
+            {/* Recent achievements */}
+            <div>
+              Recent achievement(s):
+              {this.state.recentAchievements.map((item: IAchievement, index: number) => {
+                const points = item.points > 1 ? `${item.points} points` : `${item.points} point`;
+                return (
+                  <a
+                    key={index}
+                    href={RA_URL + "/Achievement/" + item.id}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={Styles.achievementLinkStyle()}
+                  >
+                    <div style={Styles.achievementContainerStyle()}>
+                      <Stack horizontal>
+                        <img
+                          src={item.badgeUrl}
+                          alt={item.title + " achievement"}
+                          style={Styles.achievementBadgeStyle(item.hardcoreAchieved)}
+                        />
+
+                        <Stack>
+                          <div style={Styles.achievementTitleStyle()}>{item.title}</div>
+                          <div>{points}</div>
+                        </Stack>
+                      </Stack>
+                    </div>
+                  </a>
+                );
+              })}
+            </div>
+          </Stack>
+        )}
+        {this.state.recentAchievements.length === 0 && <Stack>No achievements earned recently...</Stack>}
+      </>
+    );
+  };
 
   private _userSummary = () => {
     // Get data from the number of games equivalent to number achievements user wants to show
     // If each game only has one recent achievement, then we are still getting the right number of achievements to show.
 
-    // TODO: Since I disabled the recent achievements count, I need to ensure that the default of five is shown.
+    // As a fallback, in case the setting is somehow set to 0, we will fetch 5 by default to avoid an error.
     const count = this.props.numAchievementsToShow === 0 ? 5 : this.props.numAchievementsToShow;
 
     // Making other calls to see what the data responses are
