@@ -22,13 +22,6 @@ export const EMPTY_CONFIG: IAppConfig = {
 export const EXT_CONFIG_KEY = "0.1.0";
 
 ////// Interfaces //////
-export interface IAppState {
-  finishedLoading: boolean;
-  username: string;
-  apiKey: string;
-  numAchievementsToShow: number;
-}
-
 export interface IAppConfig {
   username: string;
   apiKey: string;

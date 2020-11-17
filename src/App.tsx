@@ -2,11 +2,20 @@ import * as React from "react";
 import "./App.css";
 import { Auth } from "./Auth";
 import { Main } from "./Main";
-import { EMPTY_CONFIG, IAppConfig, IAppState } from "./models";
+import { EMPTY_CONFIG, IAppConfig } from "./models";
 import { ITwitchAuth, TwitchExtensionHelper } from "./twitch-ext";
 
+interface IAppState {
+  finishedLoading: boolean;
+  username: string;
+  apiKey: string;
+  numAchievementsToShow: number;
+}
 interface IAppProps {}
 
+/**
+ * Main panel entry point. Responsible for setting up Twitch extension helper and fetching config.
+ */
 class App extends React.Component<IAppProps, IAppState> {
   private _auth: Auth;
   private _twitch: TwitchExtensionHelper | undefined;
@@ -43,13 +52,7 @@ class App extends React.Component<IAppProps, IAppState> {
   }
 
   public render() {
-    return (
-      <div className="App">
-        {this.state.finishedLoading && (
-          <Main username={this.state.username} apiKey={this.state.apiKey} numAchievementsToShow={this.state.numAchievementsToShow} />
-        )}
-      </div>
-    );
+    return <div className="App">{this.state.finishedLoading && <Main {...this.state} />}</div>;
   }
 
   private _updateConfigState = () => {
