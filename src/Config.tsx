@@ -1,9 +1,9 @@
 import { Callout, DirectionalHint, Stack, TextField } from "@fluentui/react";
 import * as React from "react";
-import { APP_VERSION, IAppConfig } from "./App";
 import { Auth } from "./Auth";
 import * as Styles from "./Config.style";
 import blankKeyImage from "./img/BlankKey.png";
+import { EMPTY_CONFIG, EXT_CONFIG_KEY, Fields, IAppConfig, MAX_ACHIEVEMENTS_TO_SHOW } from "./models";
 import { RA_URL } from "./ra-api";
 import { ConfigSegments, ITwitchAuth, TwitchExtensionHelper } from "./twitch-ext";
 
@@ -17,21 +17,6 @@ interface IConfigState {
   isApiKeyCalloutVisible: boolean;
 }
 interface IConfigProps {}
-
-enum Fields {
-  username = "username",
-  apiKey = "apiKey",
-  numAchievementsToShow = "numAchievementsToShow",
-}
-
-// TODO: Determine actual max value. 30 seems good so far...
-const MAX_ACHIEVEMENTS_TO_SHOW = 30;
-
-export const EMPTY_CONFIG: IAppConfig = {
-  username: "",
-  apiKey: "",
-  numAchievementsToShow: 5,
-};
 
 export class Config extends React.Component<IConfigProps, IConfigState> {
   private _auth: Auth;
@@ -266,7 +251,7 @@ export class Config extends React.Component<IConfigProps, IConfigState> {
       numAchievementsToShow: parseInt(this.state.numAchievementsToShow),
     };
     if (this._twitch) {
-      this._twitch.configuration.set(ConfigSegments.broadcaster, APP_VERSION, JSON.stringify(config));
+      this._twitch.configuration.set(ConfigSegments.broadcaster, EXT_CONFIG_KEY, JSON.stringify(config));
       this.setState({ changesSavedIndicator: true, saveButtonEnabled: false });
     } else {
       // TODO: Display some sort of error on the config page...

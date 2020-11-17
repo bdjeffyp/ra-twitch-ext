@@ -1,25 +1,9 @@
 import * as React from "react";
 import "./App.css";
 import { Auth } from "./Auth";
-import { EMPTY_CONFIG } from "./Config";
 import { Main } from "./Main";
+import { EMPTY_CONFIG, IAppConfig, IAppState } from "./models";
 import { ITwitchAuth, TwitchExtensionHelper } from "./twitch-ext";
-
-// Update to reflect the current version on Twitch
-export const APP_VERSION = "0.1.0";
-
-export interface IAppState {
-  finishedLoading: boolean;
-  username: string;
-  apiKey: string;
-  numAchievementsToShow: number;
-}
-
-export interface IAppConfig {
-  username: string;
-  apiKey: string;
-  numAchievementsToShow: number;
-}
 
 interface IAppProps {}
 

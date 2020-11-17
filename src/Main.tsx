@@ -1,8 +1,8 @@
 import { Spinner, SpinnerSize, Stack } from "@fluentui/react";
 import DayJs from "dayjs";
 import * as React from "react";
-import { IAppConfig } from "./App";
 import * as Styles from "./Main.style";
+import { IAppConfig } from "./models";
 import { IAchievement, IApiProps, IUserSummary, RA_URL, RetroAchievementsApi } from "./ra-api";
 
 interface IMainState {
