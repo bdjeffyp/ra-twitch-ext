@@ -2,7 +2,7 @@ import { Spinner, SpinnerSize, Stack } from "@fluentui/react";
 import DayJs from "dayjs";
 import * as React from "react";
 import * as Styles from "./Main.style";
-import { IAppConfig } from "./models";
+import { DEFAULT_ACHIEVEMENT_COUNT, IAppConfig } from "./models";
 import { IAchievement, IApiProps, IUserSummary, RA_URL, RetroAchievementsApi } from "./ra-api";
 
 interface IMainState {
@@ -206,8 +206,8 @@ export class Main extends React.Component<IAppConfig, IMainState> {
     // Get data from the number of games equivalent to number achievements user wants to show
     // If each game only has one recent achievement, then we are still getting the right number of achievements to show.
 
-    // As a fallback, in case the setting is somehow set to 0, we will fetch 5 by default to avoid an error.
-    const count = this.props.numAchievementsToShow === 0 ? 5 : this.props.numAchievementsToShow;
+    // As a fallback, in case the setting is somehow set to 0, we will fetch DEFAULT_ACHIEVEMENT_COUNT by default to avoid an error.
+    const count = this.props.numAchievementsToShow === 0 ? DEFAULT_ACHIEVEMENT_COUNT : this.props.numAchievementsToShow;
 
     // Making other calls to see what the data responses are
     // this._ra.getConsoleIds();

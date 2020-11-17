@@ -9,10 +9,13 @@ export enum Fields {
 // TODO: Determine actual max value. 30 seems good so far...
 export const MAX_ACHIEVEMENTS_TO_SHOW = 30;
 
+// Default number of achievements to display
+export const DEFAULT_ACHIEVEMENT_COUNT = 5;
+
 export const EMPTY_CONFIG: IAppConfig = {
   username: "",
   apiKey: "",
-  numAchievementsToShow: 5,
+  numAchievementsToShow: DEFAULT_ACHIEVEMENT_COUNT,
 };
 
 // Extension Configuration Service key must match what is on Twitch Dev Console

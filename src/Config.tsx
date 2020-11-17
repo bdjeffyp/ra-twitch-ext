@@ -3,7 +3,7 @@ import * as React from "react";
 import { Auth } from "./Auth";
 import * as Styles from "./Config.style";
 import blankKeyImage from "./img/BlankKey.png";
-import { EMPTY_CONFIG, EXT_CONFIG_KEY, Fields, IAppConfig, MAX_ACHIEVEMENTS_TO_SHOW } from "./models";
+import { DEFAULT_ACHIEVEMENT_COUNT, EMPTY_CONFIG, EXT_CONFIG_KEY, Fields, IAppConfig, MAX_ACHIEVEMENTS_TO_SHOW } from "./models";
 import { RA_URL } from "./ra-api";
 import { ConfigSegments, ITwitchAuth, TwitchExtensionHelper } from "./twitch-ext";
 
@@ -32,7 +32,7 @@ export class Config extends React.Component<IConfigProps, IConfigState> {
     this.state = {
       username: "",
       apiKey: "",
-      numAchievementsToShow: "5",
+      numAchievementsToShow: DEFAULT_ACHIEVEMENT_COUNT.toString(),
       finishedLoading: false,
       changesSavedIndicator: false,
       saveButtonEnabled: false,
