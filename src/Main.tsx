@@ -70,8 +70,6 @@ export class Main extends React.Component<IAppConfig, IMainState> {
         {!this.state.initialLoading && this.state.failstate && <div>{this.state.errorMessage + " - Refresh the page"}</div>}
         {!this.state.initialLoading && !this.state.failstate && (
           <>
-            {/* TODO: Remove test mode header */}
-            Test Mode!!!
             {this.state.showUserProfile && this._renderUserProfileInfo()}
             {this.state.showLastGamePlaying && this._renderLastGamePlaying()}
             {this.state.showRecentAchievementList && this._renderRecentAchievements()}
