@@ -3,14 +3,12 @@ import * as React from "react";
 import { Auth } from "./Auth";
 import * as Styles from "./Config.style";
 import blankKeyImage from "./img/BlankKey.png";
-import { DEFAULT_ACHIEVEMENT_COUNT, EMPTY_CONFIG, EXT_CONFIG_KEY, Fields, IAppConfig, MAX_ACHIEVEMENTS_TO_SHOW } from "./models";
+import { DEFAULT_ACHIEVEMENT_COUNT, DEFAULT_CONFIG, EXT_CONFIG_KEY, Fields, IAppConfig, MAX_ACHIEVEMENTS_TO_SHOW } from "./models";
 import { RA_URL } from "./ra-api";
 import { ConfigSegments, ITwitchAuth, TwitchExtensionHelper } from "./twitch-ext";
 
-interface IConfigState {
-  username: string;
-  apiKey: string;
-  numAchievementsToShow: string;
+interface IConfigState extends IAppConfig {
+  achievementsToShow: string;
   finishedLoading: boolean;
   changesSavedIndicator: boolean;
   saveButtonEnabled: boolean;
@@ -29,10 +27,11 @@ export class Config extends React.Component<IConfigProps, IConfigState> {
     super(props);
     this._auth = new Auth();
     this._twitch = window.Twitch ? window.Twitch.ext : undefined;
+
+    // Initialize state with defaults from DEFAULT_CONFIG
     this.state = {
-      username: "",
-      apiKey: "",
-      numAchievementsToShow: DEFAULT_ACHIEVEMENT_COUNT.toString(),
+      ...DEFAULT_CONFIG,
+      achievementsToShow: DEFAULT_ACHIEVEMENT_COUNT.toString(),
       finishedLoading: false,
       changesSavedIndicator: false,
       saveButtonEnabled: false,
@@ -56,10 +55,10 @@ export class Config extends React.Component<IConfigProps, IConfigState> {
         try {
           config = JSON.parse(rawConfig);
         } catch (error) {
-          config = EMPTY_CONFIG;
+          config = DEFAULT_CONFIG;
         }
 
-        this.setState({ username: config.username, apiKey: config.apiKey, numAchievementsToShow: config.numAchievementsToShow.toString() });
+        this.setState({ username: config.username, apiKey: config.apiKey, achievementsToShow: config.numAchievementsToShow.toString() });
       });
     }
   }
@@ -118,7 +117,7 @@ export class Config extends React.Component<IConfigProps, IConfigState> {
               id={Fields.numAchievementsToShow}
               type="text"
               name={Fields.numAchievementsToShow}
-              value={this.state.numAchievementsToShow}
+              value={this.state.achievementsToShow}
               onFocus={this._onInputClick}
               onChange={this._onNumAchievementsChange}
               onGetErrorMessage={this._validateNumAchievements}
@@ -204,7 +203,7 @@ export class Config extends React.Component<IConfigProps, IConfigState> {
   };
 
   private _onNumAchievementsChange = (_: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newNumber?: string) => {
-    this.setState({ numAchievementsToShow: newNumber || "" });
+    this.setState({ achievementsToShow: newNumber || "" });
   };
 
   private _validateNumAchievements = (newNumber: string): string => {
@@ -241,14 +240,20 @@ export class Config extends React.Component<IConfigProps, IConfigState> {
   private _saveConfig = () => {
     // Here is the final chance to validate the parsing of the number of achievements
     // Shouldn't be able to press Save button unless already verified to be a valid int, but perform one last check here
-    if (isNaN(parseInt(this.state.numAchievementsToShow))) {
+    if (isNaN(parseInt(this.state.achievementsToShow))) {
       // TODO: Should show some sort of error?
       return;
     }
+
+    // TODO: Update the show* members with values in state!
     const config: IAppConfig = {
       username: this.state.username,
       apiKey: this.state.apiKey,
-      numAchievementsToShow: parseInt(this.state.numAchievementsToShow),
+      numAchievementsToShow: parseInt(this.state.achievementsToShow),
+      showUserProfile: true,
+      showLastGamePlaying: true,
+      showRichPresenceMessage: true,
+      showRecentAchievementList: true,
     };
     if (this._twitch) {
       this._twitch.configuration.set(ConfigSegments.broadcaster, EXT_CONFIG_KEY, JSON.stringify(config));

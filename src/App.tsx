@@ -2,14 +2,11 @@ import * as React from "react";
 import "./App.css";
 import { Auth } from "./Auth";
 import { Main } from "./Main";
-import { EMPTY_CONFIG, IAppConfig } from "./models";
+import { DEFAULT_CONFIG, IAppConfig } from "./models";
 import { ITwitchAuth, TwitchExtensionHelper } from "./twitch-ext";
 
-interface IAppState {
+interface IAppState extends IAppConfig {
   finishedLoading: boolean;
-  username: string;
-  apiKey: string;
-  numAchievementsToShow: number;
 }
 interface IAppProps {}
 
@@ -24,11 +21,11 @@ class App extends React.Component<IAppProps, IAppState> {
     super(props);
     this._auth = new Auth();
     this._twitch = window.Twitch ? window.Twitch.ext : undefined;
+
+    // Initialize the state with defaults from DEFAULT_CONFIG
     this.state = {
       finishedLoading: false,
-      username: "",
-      apiKey: "",
-      numAchievementsToShow: 0,
+      ...DEFAULT_CONFIG,
     };
   }
 
@@ -66,7 +63,7 @@ class App extends React.Component<IAppProps, IAppState> {
     try {
       config = JSON.parse(rawConfig);
     } catch (error) {
-      config = EMPTY_CONFIG;
+      config = DEFAULT_CONFIG;
     }
 
     this.setState({ username: config.username, apiKey: config.apiKey, numAchievementsToShow: config.numAchievementsToShow });
