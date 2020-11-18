@@ -3,6 +3,8 @@ import * as React from "react";
 
 const goldColor = "#CC9900";
 const lightBlueColor = "#2C97FA";
+const hoverLightBlueColor = "#005ACE";
+const disabledLightBlueColor = "rgba(44, 151, 250, 0.3)";
 const redWarningColor = "#FF2020";
 const lightGrayColor = "#282c34";
 
@@ -103,14 +105,37 @@ export const linkStyle = (): React.CSSProperties => {
   };
 };
 
-export const checkboxStyle = (): Partial<ICheckboxStyles> => {
+export const checkboxStyle = (checked: boolean, disabled?: boolean): Partial<ICheckboxStyles> => {
   return {
-    text: {
-      color: lightBlueColor,
-    },
-    // checkmark: {
-    //   color: "white",
-    // },
+    checkbox: [
+      !checked && !disabled && { borderColor: lightBlueColor },
+      !checked && disabled && { borderColor: disabledLightBlueColor },
+      checked && disabled && { borderColor: disabledLightBlueColor, backgroundColor: disabledLightBlueColor },
+    ],
+    text: [disabled && { color: disabledLightBlueColor }, !disabled && { color: lightBlueColor }],
+    root: [
+      {
+        margin: "0.5em",
+      },
+      !disabled && {
+        // eslint-disable-next-line
+        [":hover .ms-Checkbox-text"]: { color: hoverLightBlueColor },
+      },
+      disabled && {
+        // eslint-disable-next-line
+        [":hover .ms-Checkbox-text"]: { color: disabledLightBlueColor },
+      },
+      !checked &&
+        !disabled && {
+          // eslint-disable-next-line
+          [":hover .ms-Checkbox-checkbox"]: { borderColor: hoverLightBlueColor },
+        },
+      !checked &&
+        disabled && {
+          // eslint-disable-next-line
+          [":hover .ms-Checkbox-checkbox"]: { borderColor: disabledLightBlueColor },
+        },
+    ],
   };
 };
 

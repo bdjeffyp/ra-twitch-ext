@@ -66,7 +66,15 @@ class App extends React.Component<IAppProps, IAppState> {
       config = DEFAULT_CONFIG;
     }
 
-    this.setState({ username: config.username, apiKey: config.apiKey, numAchievementsToShow: config.numAchievementsToShow });
+    this.setState({
+      username: config.username,
+      apiKey: config.apiKey,
+      numAchievementsToShow: config.numAchievementsToShow,
+      showUserProfile: config.showUserProfile,
+      showLastGamePlaying: config.showLastGamePlaying,
+      showRichPresenceMessage: config.showRichPresenceMessage,
+      showRecentAchievementList: config.showRecentAchievementList,
+    });
   };
 }
 

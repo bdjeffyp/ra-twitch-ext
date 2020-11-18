@@ -57,6 +57,18 @@ export class Main extends React.Component<IAppConfig, IMainState> {
   }
 
   public componentDidMount() {
+    console.log(this.props.showUserProfile);
+    console.log(this.props.showLastGamePlaying);
+    console.log(this.props.showRichPresenceMessage);
+    console.log(this.props.showRecentAchievementList);
+    // Set the layout customization
+    this.setState({
+      showUserProfile: this.props.showUserProfile,
+      showLastGamePlaying: this.props.showLastGamePlaying,
+      showRichPresenceMessage: this.props.showRichPresenceMessage,
+      showRecentAchievementList: this.props.showRecentAchievementList,
+    });
+
     // Get the data for the panel from Retro Achievements and kick off the periodic fetching sequence
     this._userSummary();
   }

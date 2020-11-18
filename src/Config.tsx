@@ -20,6 +20,7 @@ interface IConfigState extends IAppConfig {
   changesSavedIndicator: boolean;
   saveButtonEnabled: boolean;
   isApiKeyCalloutVisible: boolean;
+  hasTextFieldError: boolean;
 }
 interface IConfigProps {}
 
@@ -43,6 +44,7 @@ export class Config extends React.Component<IConfigProps, IConfigState> {
       changesSavedIndicator: false,
       saveButtonEnabled: false,
       isApiKeyCalloutVisible: false,
+      hasTextFieldError: false,
     };
   }
 
@@ -65,7 +67,15 @@ export class Config extends React.Component<IConfigProps, IConfigState> {
           config = DEFAULT_CONFIG;
         }
 
-        this.setState({ username: config.username, apiKey: config.apiKey, achievementsToShow: config.numAchievementsToShow.toString() });
+        this.setState({
+          username: config.username,
+          apiKey: config.apiKey,
+          achievementsToShow: config.numAchievementsToShow.toString(),
+          showUserProfile: config.showUserProfile,
+          showLastGamePlaying: config.showLastGamePlaying,
+          showRichPresenceMessage: config.showRichPresenceMessage,
+          showRecentAchievementList: config.showRecentAchievementList,
+        });
       });
     }
   }
@@ -143,7 +153,26 @@ export class Config extends React.Component<IConfigProps, IConfigState> {
             label={ConfigCheckboxes.userProfile}
             checked={this.state.showUserProfile}
             onChange={() => this._onCheckChanged(ConfigCheckboxes.userProfile)}
-            styles={Styles.checkboxStyle()}
+            styles={Styles.checkboxStyle(this.state.showUserProfile)}
+          />
+          <Checkbox
+            label={ConfigCheckboxes.lastGamePlaying}
+            checked={this.state.showLastGamePlaying}
+            onChange={() => this._onCheckChanged(ConfigCheckboxes.lastGamePlaying)}
+            styles={Styles.checkboxStyle(this.state.showLastGamePlaying)}
+          />
+          <Checkbox
+            label={ConfigCheckboxes.richPresence}
+            checked={this.state.showRichPresenceMessage}
+            disabled={!this.state.showLastGamePlaying}
+            onChange={() => this._onCheckChanged(ConfigCheckboxes.richPresence)}
+            styles={Styles.checkboxStyle(this.state.showRichPresenceMessage, !this.state.showLastGamePlaying)}
+          />
+          <Checkbox
+            label={ConfigCheckboxes.recentAchievements}
+            checked={this.state.showRecentAchievementList}
+            onChange={() => this._onCheckChanged(ConfigCheckboxes.recentAchievements)}
+            styles={Styles.checkboxStyle(this.state.showRecentAchievementList)}
           />
           {/* Save button and status */}
           <button type="submit" disabled={!this.state.saveButtonEnabled} onClick={this._saveConfig} style={Styles.buttonInputStyle()}>
@@ -200,9 +229,11 @@ export class Config extends React.Component<IConfigProps, IConfigState> {
     let errorText = "";
     if (newName === "") {
       this._usernameTextFieldError = true;
+      this._setTextFieldErrorState();
       errorText = "Retro Achievements username is required";
     } else {
       this._usernameTextFieldError = false;
+      this._clearTextFieldErrorState();
     }
     this._updateSaveButtonEnabledState(this._usernameTextFieldError);
     return errorText;
@@ -216,9 +247,11 @@ export class Config extends React.Component<IConfigProps, IConfigState> {
     let errorText = "";
     if (newKey === "") {
       this._apiKeyTextFieldError = true;
+      this._setTextFieldErrorState();
       errorText = "API Key is required";
     } else {
       this._apiKeyTextFieldError = false;
+      this._clearTextFieldErrorState();
     }
     this._updateSaveButtonEnabledState(this._apiKeyTextFieldError);
     return errorText;
@@ -247,16 +280,14 @@ export class Config extends React.Component<IConfigProps, IConfigState> {
     // Update the ability to save
     if (validCount) {
       this._numAchievementsTextFieldError = false;
+      this._clearTextFieldErrorState();
     } else {
       this._numAchievementsTextFieldError = true;
+      this._setTextFieldErrorState();
       errorText = "Must be a number between 1 and 30";
     }
     this._updateSaveButtonEnabledState(this._numAchievementsTextFieldError);
     return errorText;
-  };
-
-  private _updateSaveButtonEnabledState = (hasError: boolean) => {
-    this.setState({ saveButtonEnabled: !hasError });
   };
 
   private _onCheckChanged = (configItem: ConfigCheckboxes) => {
@@ -274,6 +305,30 @@ export class Config extends React.Component<IConfigProps, IConfigState> {
         this.setState({ showRecentAchievementList: !this.state.showRecentAchievementList });
         break;
     }
+
+    // Enable the save button as long as there are no errors
+    if (!this.state.hasTextFieldError) {
+      this.setState({ saveButtonEnabled: true });
+    }
+
+    // TODO: THIS NEEDS TO BE FIXED!!
+
+    // If all checkboxes (user profile, last game, and recent achievements) are unchecked, disable the save button
+    if (!this.state.showUserProfile && !this.state.showLastGamePlaying && !this.state.showRecentAchievementList) {
+      this._updateSaveButtonEnabledState(true);
+    }
+  };
+
+  private _updateSaveButtonEnabledState = (hasError: boolean) => {
+    this.setState({ saveButtonEnabled: !hasError });
+  };
+
+  private _setTextFieldErrorState = () => {
+    this.setState({ hasTextFieldError: true });
+  };
+
+  private _clearTextFieldErrorState = () => {
+    this.setState({ hasTextFieldError: false });
   };
 
   private _saveConfig = () => {
@@ -284,15 +339,14 @@ export class Config extends React.Component<IConfigProps, IConfigState> {
       return;
     }
 
-    // TODO: Update the show* members with values in state!
     const config: IAppConfig = {
       username: this.state.username,
       apiKey: this.state.apiKey,
       numAchievementsToShow: parseInt(this.state.achievementsToShow),
-      showUserProfile: true,
-      showLastGamePlaying: true,
-      showRichPresenceMessage: true,
-      showRecentAchievementList: true,
+      showUserProfile: this.state.showUserProfile,
+      showLastGamePlaying: this.state.showLastGamePlaying,
+      showRichPresenceMessage: this.state.showRichPresenceMessage,
+      showRecentAchievementList: this.state.showRecentAchievementList,
     };
     if (this._twitch) {
       this._twitch.configuration.set(ConfigSegments.broadcaster, EXT_CONFIG_KEY, JSON.stringify(config));
