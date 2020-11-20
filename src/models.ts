@@ -5,6 +5,12 @@ export enum Fields {
   numAchievementsToShow = "numAchievementsToShow",
 }
 
+export enum Sections {
+  userProfile,
+  lastGame,
+  recentAchievements,
+}
+
 ////// Interfaces //////
 export interface IAppConfig {
   username: string;
@@ -14,6 +20,7 @@ export interface IAppConfig {
   showLastGamePlaying: boolean;
   showRichPresenceMessage: boolean;
   showRecentAchievementList: boolean;
+  sectionOrder: Sections[];
 }
 
 ////// Constants //////
@@ -31,6 +38,7 @@ export const DEFAULT_CONFIG: IAppConfig = {
   showLastGamePlaying: true,
   showRichPresenceMessage: true,
   showRecentAchievementList: true,
+  sectionOrder: [Sections.userProfile, Sections.lastGame, Sections.recentAchievements],
 };
 
 // Extension Configuration Service key must match what is on Twitch Dev Console

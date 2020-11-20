@@ -2,7 +2,7 @@ import { Spinner, SpinnerSize, Stack } from "@fluentui/react";
 import DayJs from "dayjs";
 import * as React from "react";
 import * as Styles from "./Main.style";
-import { DEFAULT_ACHIEVEMENT_COUNT, IAppConfig } from "./models";
+import { DEFAULT_ACHIEVEMENT_COUNT, IAppConfig, Sections } from "./models";
 import { IAchievement, IApiProps, IUserSummary, RA_URL, RetroAchievementsApi } from "./ra-api";
 
 interface IMainState {
@@ -22,6 +22,7 @@ interface IMainState {
   showLastGamePlaying: boolean;
   showRichPresenceMessage: boolean;
   showRecentAchievementList: boolean;
+  sectionOrder: Sections[];
 }
 
 export class Main extends React.Component<IAppConfig, IMainState> {
@@ -36,6 +37,7 @@ export class Main extends React.Component<IAppConfig, IMainState> {
       apiKey: this.props.apiKey,
     };
     this._ra = new RetroAchievementsApi(apiProps);
+
     this.state = {
       failstate: false,
       errorMessage: "",
@@ -53,14 +55,11 @@ export class Main extends React.Component<IAppConfig, IMainState> {
       showLastGamePlaying: true,
       showRichPresenceMessage: true,
       showRecentAchievementList: true,
+      sectionOrder: [],
     };
   }
 
   public componentDidMount() {
-    console.log(this.props.showUserProfile);
-    console.log(this.props.showLastGamePlaying);
-    console.log(this.props.showRichPresenceMessage);
-    console.log(this.props.showRecentAchievementList);
     // Set the layout customization
     this.setState({
       showUserProfile: this.props.showUserProfile,
@@ -80,13 +79,7 @@ export class Main extends React.Component<IAppConfig, IMainState> {
           <Spinner size={SpinnerSize.large} label="Loading" style={Styles.loadingSpinnerStyle()}></Spinner>
         )}
         {!this.state.initialLoading && this.state.failstate && <div>{this.state.errorMessage + " - Refresh the page"}</div>}
-        {!this.state.initialLoading && !this.state.failstate && (
-          <>
-            {this.state.showUserProfile && this._renderUserProfileInfo()}
-            {this.state.showLastGamePlaying && this._renderLastGamePlaying()}
-            {this.state.showRecentAchievementList && this._renderRecentAchievements()}
-          </>
-        )}
+        {!this.state.initialLoading && !this.state.failstate && <>{this._renderPanelSections()}</>}
       </div>
     );
   }
@@ -100,7 +93,7 @@ export class Main extends React.Component<IAppConfig, IMainState> {
    *
    * PHOTO  Retro Ratio points
    */
-  private _renderUserProfileInfo = () => {
+  private _renderUserProfileInfo = (index: number): React.ReactNode => {
     // Create formatted text string for the user's Retro Achievements standing
     let rankText = "";
     if (this.state.rank) {
@@ -128,7 +121,10 @@ export class Main extends React.Component<IAppConfig, IMainState> {
     }
 
     return (
-      <Stack style={Styles.profileContainerStyle()}>
+      <Stack
+        key={`${index}: ${Sections.lastGame}`}
+        style={Styles.profileContainerStyle(this.isFirstSection(index), this.isLastSection(index))}
+      >
         <Stack horizontal>
           {/* Profile pic. Note that alt text doesn't need the word "photo" in it. */}
           <img src={this.state.userPicUrl} alt="Streamer's Retro Achievements profile" style={Styles.profileImageStyle()} />
@@ -153,9 +149,9 @@ export class Main extends React.Component<IAppConfig, IMainState> {
   /**
    * Renders the information about the last game the user has played as well as rich presence data
    */
-  private _renderLastGamePlaying = () => {
+  private _renderLastGamePlaying = (index: number): React.ReactNode => {
     return (
-      <Stack style={Styles.lastGamePlayingContainerStyle()}>
+      <Stack key={`${index}: ${Sections.lastGame}`} style={Styles.lastGamePlayingContainerStyle(this.isLastSection(index))}>
         <div>
           <span>Last seen playing: </span>
           <a href={this.state.lastGameUrl} target="_blank" rel="noopener noreferrer" style={Styles.lastGameTitleStyle()}>
@@ -171,9 +167,9 @@ export class Main extends React.Component<IAppConfig, IMainState> {
   /**
    * Renders the list of recent achievements or displays a message if none have been earned recently
    */
-  private _renderRecentAchievements = () => {
+  private _renderRecentAchievements = (index: number): React.ReactNode => {
     return (
-      <>
+      <div key={`${index}: ${Sections.lastGame}`} style={Styles.recentAchievementsContainerStyle(this.isLastSection(index))}>
         {this.state.recentAchievements.length > 0 && (
           <Stack>
             {/* Recent achievements */}
@@ -210,8 +206,26 @@ export class Main extends React.Component<IAppConfig, IMainState> {
           </Stack>
         )}
         {this.state.recentAchievements.length === 0 && <Stack>No achievements earned recently...</Stack>}
-      </>
+      </div>
     );
+  };
+
+  /**
+   * Render sections based on the order defined by the configuration
+   */
+  private _renderPanelSections = (): React.ReactNode[] => {
+    return this.props.sectionOrder.map((section: Sections, index: number) => {
+      switch (section) {
+        case Sections.userProfile:
+          return this._renderUserProfileInfo(index);
+        case Sections.lastGame:
+          return this._renderLastGamePlaying(index);
+        case Sections.recentAchievements:
+          return this._renderRecentAchievements(index);
+        default:
+          return <div key={"unknown"}>BUG: An invalid section</div>;
+      }
+    });
   };
 
   private _userSummary = () => {
@@ -269,5 +283,21 @@ export class Main extends React.Component<IAppConfig, IMainState> {
 
     // Set the interval to call this again in one minute!
     setTimeout(this._userSummary, 60000);
+  };
+
+  /**
+   * Is this section being rendered the first section of the sectionOrder array?
+   * @param index Index of the sectionOrder array
+   */
+  private isFirstSection = (index: number): boolean => {
+    return index === 0;
+  };
+
+  /**
+   * Is this section being rendered the last section of the sectionOrder array?
+   * @param index Index of the sectionOrder array
+   */
+  private isLastSection = (index: number): boolean => {
+    return index === this.props.sectionOrder.length - 1;
   };
 }

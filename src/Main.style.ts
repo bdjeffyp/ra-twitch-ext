@@ -19,9 +19,20 @@ export const loadingSpinnerStyle = (): React.CSSProperties => {
   };
 };
 
-export const profileContainerStyle = (): React.CSSProperties => {
+export const profileContainerStyle = (isFirst: boolean, isLast: boolean): React.CSSProperties => {
+  if (isFirst) {
+    return {
+      marginBottom: "5px",
+    };
+  }
+  if (isLast) {
+    return {
+      paddingTop: "5px",
+    };
+  }
   return {
-    paddingBottom: "5px",
+    marginBottom: "5px",
+    paddingTop: "5px",
   };
 };
 
@@ -53,15 +64,27 @@ export const retroRatioPointsStyle = (): React.CSSProperties => {
   };
 };
 
-export const lastGamePlayingContainerStyle = (): React.CSSProperties => {
+export const lastGamePlayingContainerStyle = (isLast: boolean): React.CSSProperties => {
+  if (isLast) {
+    return {};
+  }
   return {
-    marginBottom: "1vmin",
+    marginBottom: "5px",
   };
 };
 
 export const richPresenceContainerStyle = (): React.CSSProperties => {
   return {
     fontSize: "calc(6px + 2vmin)",
+  };
+};
+
+export const recentAchievementsContainerStyle = (isLast: boolean): React.CSSProperties => {
+  if (isLast) {
+    return {};
+  }
+  return {
+    marginBottom: "5px",
   };
 };
 
