@@ -1,4 +1,4 @@
-import { ICalloutContentStyles, ICheckboxStyles, ITextFieldStyles } from "@fluentui/react";
+import { ICalloutContentStyles, ICheckboxStyles, IIconStyles, ITextFieldStyles } from "@fluentui/react";
 import * as React from "react";
 
 const goldColor = "#CC9900";
@@ -105,7 +105,53 @@ export const linkStyle = (): React.CSSProperties => {
   };
 };
 
-export const checkboxStyle = (checked: boolean, disabled?: boolean): Partial<ICheckboxStyles> => {
+export const sectionContainerStyle = (): React.CSSProperties => {
+  return {
+    backgroundColor: "#1b1e24",
+    border: "1px solid black",
+    borderRadius: "3px",
+    padding: "0.5em",
+    margin: "5px 0",
+    maxWidth: "300px",
+  };
+};
+
+export const emulatedStackStyle = (): React.CSSProperties => {
+  return {
+    display: "flex",
+    flexFlow: "row nowrap",
+    width: "auto",
+    height: "auto",
+    boxSizing: "border-box",
+  };
+};
+
+export const dragHandleStyle = (): Partial<IIconStyles> => {
+  return {
+    root: {
+      width: "1rem",
+      height: "1rem",
+      fontSize: "1rem",
+      cursor: "grab",
+      display: "flex",
+      alignSelf: "center",
+    },
+  };
+};
+
+export const childOfStyle = (): Partial<IIconStyles> => {
+  return {
+    root: {
+      width: "1rem",
+      height: "1rem",
+      fontSize: "1rem",
+      marginLeft: "1rem",
+      cursor: "default",
+    },
+  };
+};
+
+export const checkboxStyle = (checked: boolean, disabled?: boolean, childCheckbox?: boolean): Partial<ICheckboxStyles> => {
   return {
     checkbox: [
       !checked && !disabled && { borderColor: lightBlueColor },
@@ -114,8 +160,10 @@ export const checkboxStyle = (checked: boolean, disabled?: boolean): Partial<ICh
     ],
     text: [disabled && { color: disabledLightBlueColor }, !disabled && { color: lightBlueColor }],
     root: [
+      childCheckbox && { marginLeft: "3px" },
+      !childCheckbox && { marginLeft: "0.5em" },
       {
-        margin: "0.5em",
+        display: "inline-flex",
       },
       !disabled && {
         // eslint-disable-next-line

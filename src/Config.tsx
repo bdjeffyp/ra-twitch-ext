@@ -1,5 +1,6 @@
-import { Callout, Checkbox, DirectionalHint, Stack, TextField } from "@fluentui/react";
+import { Callout, Checkbox, DirectionalHint, Icon, Stack, TextField } from "@fluentui/react";
 import * as React from "react";
+import { DragDropContext } from "react-beautiful-dnd";
 import { Auth } from "./Auth";
 import * as Styles from "./Config.style";
 import blankKeyImage from "./img/BlankKey.png";
@@ -49,7 +50,7 @@ export class Config extends React.Component<IConfigProps, IConfigState> {
   }
 
   public componentDidMount() {
-    // Set up Twitch stuff
+    // Set up Twitch stuff and get data from the configuration store
     if (this._twitch) {
       this._twitch.onAuthorized((auth: ITwitchAuth) => {
         this._auth.setToken(auth.token, auth.userId);
@@ -75,6 +76,7 @@ export class Config extends React.Component<IConfigProps, IConfigState> {
           showLastGamePlaying: config.showLastGamePlaying,
           showRichPresenceMessage: config.showRichPresenceMessage,
           showRecentAchievementList: config.showRecentAchievementList,
+          sectionOrder: config.sectionOrder,
         });
       });
     }
@@ -82,7 +84,7 @@ export class Config extends React.Component<IConfigProps, IConfigState> {
 
   public render() {
     return (
-      <>
+      <DragDropContext onDragEnd={() => {}}>
         <div style={Styles.configContainerStyle()}>
           {/* Instructions section */}
           <div style={Styles.instructionsStyle()}>
@@ -148,32 +150,7 @@ export class Config extends React.Component<IConfigProps, IConfigState> {
           </Stack>
           <hr style={Styles.horizontalRuleStyle()} />
           {/* Configure panel appearance */}
-          Select which sections to display:
-          <Checkbox
-            label={ConfigCheckboxes.userProfile}
-            checked={this.state.showUserProfile}
-            onChange={() => this._onCheckChanged(ConfigCheckboxes.userProfile)}
-            styles={Styles.checkboxStyle(this.state.showUserProfile)}
-          />
-          <Checkbox
-            label={ConfigCheckboxes.lastGamePlaying}
-            checked={this.state.showLastGamePlaying}
-            onChange={() => this._onCheckChanged(ConfigCheckboxes.lastGamePlaying)}
-            styles={Styles.checkboxStyle(this.state.showLastGamePlaying)}
-          />
-          <Checkbox
-            label={ConfigCheckboxes.richPresence}
-            checked={this.state.showRichPresenceMessage}
-            disabled={!this.state.showLastGamePlaying}
-            onChange={() => this._onCheckChanged(ConfigCheckboxes.richPresence)}
-            styles={Styles.checkboxStyle(this.state.showRichPresenceMessage, !this.state.showLastGamePlaying)}
-          />
-          <Checkbox
-            label={ConfigCheckboxes.recentAchievements}
-            checked={this.state.showRecentAchievementList}
-            onChange={() => this._onCheckChanged(ConfigCheckboxes.recentAchievements)}
-            styles={Styles.checkboxStyle(this.state.showRecentAchievementList)}
-          />
+          {this._renderDragAndDropSections()}
           {/* Save button and status */}
           <button type="submit" disabled={!this.state.saveButtonEnabled} onClick={this._saveConfig} style={Styles.buttonInputStyle()}>
             Save
@@ -202,9 +179,64 @@ export class Config extends React.Component<IConfigProps, IConfigState> {
             <span style={Styles.calloutQuoteStyle()}>"Reset Web API Key"</span> button to get a new key generated.
           </Callout>
         )}
-      </>
+      </DragDropContext>
     );
   }
+
+  private _renderDragAndDropSections = () => {
+    return (
+      <>
+        Select which sections to display:
+        {/* <Droppable> */}
+        <div id={ConfigCheckboxes.userProfile} style={Styles.sectionContainerStyle()}>
+          <div style={Styles.emulatedStackStyle()}>
+            <Icon iconName="GlobalNavButton" styles={Styles.dragHandleStyle()} />
+            <Checkbox
+              label={ConfigCheckboxes.userProfile}
+              checked={this.state.showUserProfile}
+              onChange={() => this._onCheckChanged(ConfigCheckboxes.userProfile)}
+              styles={Styles.checkboxStyle(this.state.showUserProfile)}
+            />
+          </div>
+        </div>
+        {/* </Droppable> */}
+        <div id={ConfigCheckboxes.lastGamePlaying} style={Styles.sectionContainerStyle()}>
+          <div style={Styles.emulatedStackStyle()}>
+            <Icon iconName="GlobalNavButton" styles={Styles.dragHandleStyle()} />
+            <Stack>
+              <Checkbox
+                label={ConfigCheckboxes.lastGamePlaying}
+                checked={this.state.showLastGamePlaying}
+                onChange={() => this._onCheckChanged(ConfigCheckboxes.lastGamePlaying)}
+                styles={Styles.checkboxStyle(this.state.showLastGamePlaying)}
+              />
+              <div>
+                <Icon iconName="Childof" styles={Styles.childOfStyle()} />
+                <Checkbox
+                  label={ConfigCheckboxes.richPresence}
+                  checked={this.state.showRichPresenceMessage}
+                  disabled={!this.state.showLastGamePlaying}
+                  onChange={() => this._onCheckChanged(ConfigCheckboxes.richPresence)}
+                  styles={Styles.checkboxStyle(this.state.showRichPresenceMessage, !this.state.showLastGamePlaying, true)}
+                />
+              </div>
+            </Stack>
+          </div>
+        </div>
+        <div id={ConfigCheckboxes.recentAchievements} style={Styles.sectionContainerStyle()}>
+          <div style={Styles.emulatedStackStyle()}>
+            <Icon iconName="GlobalNavButton" styles={Styles.dragHandleStyle()} />
+            <Checkbox
+              label={ConfigCheckboxes.recentAchievements}
+              checked={this.state.showRecentAchievementList}
+              onChange={() => this._onCheckChanged(ConfigCheckboxes.recentAchievements)}
+              styles={Styles.checkboxStyle(this.state.showRecentAchievementList)}
+            />
+          </div>
+        </div>
+      </>
+    );
+  };
 
   private _onInputClick = () => {
     this.setState({ changesSavedIndicator: false });
@@ -347,6 +379,7 @@ export class Config extends React.Component<IConfigProps, IConfigState> {
       showLastGamePlaying: this.state.showLastGamePlaying,
       showRichPresenceMessage: this.state.showRichPresenceMessage,
       showRecentAchievementList: this.state.showRecentAchievementList,
+      sectionOrder: this.state.sectionOrder,
     };
     if (this._twitch) {
       this._twitch.configuration.set(ConfigSegments.broadcaster, EXT_CONFIG_KEY, JSON.stringify(config));
