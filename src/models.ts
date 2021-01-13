@@ -44,7 +44,7 @@ export const DEFAULT_CONFIG: IAppConfig = {
   showRecentAchievementList: true,
   showMasteredSetsList: true,
   showCompletedWithMastered: false,
-  sectionOrder: [Sections.userProfile, Sections.lastGame, Sections.recentAchievements],
+  sectionOrder: [Sections.userProfile, Sections.lastGame, Sections.recentAchievements, Sections.masteredSets],
 };
 
 // Extension Configuration Service key must match what is on Twitch Dev Console

@@ -94,7 +94,7 @@ export const achievementContainerStyle = (): React.CSSProperties => {
     border: "1px solid black",
     borderRadius: "3px",
     padding: "2px",
-    margin: "2px 0",
+    margin: "2px 0 0",
   };
 };
 
@@ -105,6 +105,7 @@ export const achievementBadgeStyle = (isHardcore: boolean): React.CSSProperties 
     border: "2px solid",
     borderColor: isHardcore ? goldColor : "transparent",
     marginRight: "5px",
+    alignSelf: "center",
   };
 };
 
@@ -123,6 +124,30 @@ export const achievementLinkStyle = (): React.CSSProperties => {
 };
 
 export const lastGameTitleStyle = (): React.CSSProperties => {
+  return {
+    color: goldColor,
+    textDecorationLine: "none",
+    cursor: "pointer",
+  };
+};
+
+export const masteredSetsContainerStyle = (isLast: boolean): React.CSSProperties => {
+  if (isLast) {
+    return {};
+  }
+  return {
+    marginBottom: "5px",
+  };
+};
+
+export const footerStyle = (): React.CSSProperties => {
+  return {
+    fontSize: "calc(7px + 1vmin)",
+    marginTop: "5px",
+  };
+};
+
+export const linkStyle = (): React.CSSProperties => {
   return {
     color: goldColor,
     textDecorationLine: "none",

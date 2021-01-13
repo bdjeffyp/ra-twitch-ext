@@ -16,8 +16,9 @@ interface IMainState {
   points: string;
   retroPoints: string;
   recentAchievements: IAchievement[];
+  masteredSets: ICompletedGame[];
   richPresenceMessage: string;
-  initialLoading: boolean;
+  apisToCall: number;
   showUserProfile: boolean;
   showLastGamePlaying: boolean;
   showRichPresenceMessage: boolean;
@@ -50,8 +51,9 @@ export class Main extends React.Component<IAppConfig, IMainState> {
       points: "",
       retroPoints: "",
       recentAchievements: [],
+      masteredSets: [],
       richPresenceMessage: "",
-      initialLoading: true,
+      apisToCall: 2,
       showUserProfile: true,
       showLastGamePlaying: true,
       showRichPresenceMessage: true,
@@ -72,19 +74,37 @@ export class Main extends React.Component<IAppConfig, IMainState> {
     });
 
     // Get the data for the panel from RetroAchievements and kick off the periodic fetching sequence
-    this._getUserSummary();
-    this._getMasteredGamesList();
+    this._performInitialFetch();
   }
 
   public render() {
     return (
       <div style={Styles.mainContainerStyle()}>
-        Remove me!
-        {this.state.initialLoading && !this.state.failstate && (
+        {this.state.apisToCall > 0 && !this.state.failstate && (
           <Spinner size={SpinnerSize.large} label="Loading" style={Styles.loadingSpinnerStyle()}></Spinner>
         )}
-        {!this.state.initialLoading && this.state.failstate && <div>{this.state.errorMessage + " - Refresh the page"}</div>}
-        {!this.state.initialLoading && !this.state.failstate && <>{this._renderPanelSections()}</>}
+        {this.state.apisToCall === 0 && this.state.failstate && <div>{this.state.errorMessage + " - Refresh the page"}</div>}
+        {this.state.apisToCall === 0 && !this.state.failstate && (
+          <>
+            {this._renderPanelSections()}
+            <div style={Styles.footerStyle()}>
+              Extension created by{" "}
+              <a href="https://github.com/bdjeffyp" target="_blank" rel="noopener noreferrer" style={Styles.linkStyle()}>
+                Jeff Peterson (bdjeffyp)
+              </a>
+              <br />
+              Report issues/bugs/happiness{" "}
+              <a
+                href="https://github.com/bdjeffyp/ra-twitch-ext/issues"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={Styles.linkStyle()}
+              >
+                here
+              </a>
+            </div>
+          </>
+        )}
       </div>
     );
   }
@@ -127,8 +147,8 @@ export class Main extends React.Component<IAppConfig, IMainState> {
 
     return (
       <Stack
-        key={`${index}: ${Sections.lastGame}`}
-        style={Styles.profileContainerStyle(this.isFirstSection(index), this.isLastSection(index))}
+        key={`${index}: ${Sections.userProfile}`}
+        style={Styles.profileContainerStyle(this._isFirstSection(index), this._isLastSection(index))}
       >
         <Stack horizontal>
           {/* Profile pic. Note that alt text doesn't need the word "photo" in it. */}
@@ -156,7 +176,7 @@ export class Main extends React.Component<IAppConfig, IMainState> {
    */
   private _renderLastGamePlaying = (index: number): React.ReactNode => {
     return (
-      <Stack key={`${index}: ${Sections.lastGame}`} style={Styles.lastGamePlayingContainerStyle(this.isLastSection(index))}>
+      <Stack key={`${index}: ${Sections.lastGame}`} style={Styles.lastGamePlayingContainerStyle(this._isLastSection(index))}>
         <div>
           <span>Last seen playing: </span>
           <a href={this.state.lastGameUrl} target="_blank" rel="noopener noreferrer" style={Styles.lastGameTitleStyle()}>
@@ -174,43 +194,78 @@ export class Main extends React.Component<IAppConfig, IMainState> {
    */
   private _renderRecentAchievements = (index: number): React.ReactNode => {
     return (
-      <div key={`${index}: ${Sections.lastGame}`} style={Styles.recentAchievementsContainerStyle(this.isLastSection(index))}>
+      <div key={`${index}: ${Sections.recentAchievements}`} style={Styles.recentAchievementsContainerStyle(this._isLastSection(index))}>
         {this.state.recentAchievements.length > 0 && (
           <Stack>
-            {/* Recent achievements */}
-            <div>
-              Recent achievement(s):
-              {this.state.recentAchievements.map((item: IAchievement, index: number) => {
-                const points = item.points > 1 ? `${item.points} points` : `${item.points} point`;
-                return (
-                  <a
-                    key={index}
-                    href={RA_URL + "/Achievement/" + item.id}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={Styles.achievementLinkStyle()}
-                  >
-                    <div style={Styles.achievementContainerStyle()}>
-                      <Stack horizontal>
-                        <img
-                          src={item.badgeUrl}
-                          alt={item.title + " achievement"}
-                          style={Styles.achievementBadgeStyle(item.hardcoreAchieved)}
-                        />
+            Recent achievement(s):
+            {this.state.recentAchievements.map((item: IAchievement, index: number) => {
+              const points = item.points > 1 ? `${item.points} points` : `${item.points} point`;
+              return (
+                <a
+                  key={index}
+                  href={RA_URL + "/achievement/" + item.id}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={Styles.achievementLinkStyle()}
+                >
+                  <div style={Styles.achievementContainerStyle()}>
+                    <Stack horizontal>
+                      <img
+                        src={item.badgeUrl}
+                        alt={item.title + " achievement"}
+                        style={Styles.achievementBadgeStyle(item.hardcoreAchieved)}
+                      />
 
-                        <Stack>
-                          <div style={Styles.achievementTitleStyle()}>{item.title}</div>
-                          <div>{points}</div>
-                        </Stack>
+                      <Stack>
+                        <div style={Styles.achievementTitleStyle()}>{item.title}</div>
+                        <div>{points}</div>
                       </Stack>
-                    </div>
-                  </a>
-                );
-              })}
-            </div>
+                    </Stack>
+                  </div>
+                </a>
+              );
+            })}
           </Stack>
         )}
         {this.state.recentAchievements.length === 0 && <Stack>No achievements earned recently...</Stack>}
+      </div>
+    );
+  };
+
+  /**
+   * Renders the list of achievement sets that this user has fully mastered and/or completed
+   */
+  private _renderMasteredSets = (index: number): React.ReactNode => {
+    return (
+      <div key={`${index}: ${Sections.masteredSets}`} style={Styles.masteredSetsContainerStyle(this._isLastSection(index))}>
+        {this.state.masteredSets.length > 0 && (
+          <Stack>
+            Mastered sets:
+            {this.state.masteredSets.map((set: ICompletedGame, index: number) => {
+              const achievements = set.maxPossible > 1 ? `${set.maxPossible} achievements` : `${set.maxPossible} achievement`;
+              return (
+                <a
+                  key={index}
+                  href={`${RA_URL}/game/${set.gameId}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={Styles.achievementLinkStyle()}
+                >
+                  <div style={Styles.achievementContainerStyle()}>
+                    <Stack horizontal>
+                      <img src={set.imageIcon} alt={set.gameTitle} style={Styles.achievementBadgeStyle(set.hardcoreMode)} />
+                      <Stack>
+                        <div style={Styles.achievementTitleStyle()}>{set.gameTitle}</div>
+                        <div>{achievements}</div>
+                      </Stack>
+                    </Stack>
+                  </div>
+                </a>
+              );
+            })}
+          </Stack>
+        )}
+        {this.state.masteredSets.length === 0 && <Stack>No mastered sets... yet!</Stack>}
       </div>
     );
   };
@@ -227,6 +282,8 @@ export class Main extends React.Component<IAppConfig, IMainState> {
           return this._renderLastGamePlaying(index);
         case Sections.recentAchievements:
           return this._renderRecentAchievements(index);
+        case Sections.masteredSets:
+          return this._renderMasteredSets(index);
         default:
           return <div key={"unknown"}>BUG: An invalid section</div>;
       }
@@ -270,8 +327,8 @@ export class Main extends React.Component<IAppConfig, IMainState> {
         retroPoints: response.totalTruePoints,
         recentAchievements: achievements,
         richPresenceMessage: response.richPresenceMsg,
-        initialLoading: false,
       });
+      this._endInitialLoad();
     });
 
     // Set the interval to call this again in one minute!
@@ -290,22 +347,54 @@ export class Main extends React.Component<IAppConfig, IMainState> {
       }
 
       // Process the sets before saving in the state
-      console.log(response);
       let sets: ICompletedGame[] = [];
       if (!this.props.showCompletedWithMastered) {
         // Remove all entries with hardcore mode off
         sets = response.filter((set: ICompletedGame) => set.hardcoreMode === true);
+        // Sort by gameId for now
+        sets.sort((a: ICompletedGame, b: ICompletedGame) => a.gameId - b.gameId);
       } else {
         // Keep hardcore mode off entries that don't have a matching set with hardcore mode on
+        // Create a set that will be keyed off the gameId
+        interface IKeyedCompletedGame {
+          [id: number]: ICompletedGame;
+        }
+        const uniqueSets = {} as IKeyedCompletedGame;
+        response.forEach((game: ICompletedGame) => {
+          // If it doesn't exist in the unique collection, add it
+          if (uniqueSets[game.gameId] === undefined) {
+            uniqueSets[game.gameId] = game;
+          } else {
+            // It does exist. Make sure it is the hardcore version.
+            if (!uniqueSets[game.gameId].hardcoreMode) {
+              // Replace it
+              uniqueSets[game.gameId] = game;
+            }
+          }
+        });
+        // Now put it all into the sets array
+        sets = Object.values(uniqueSets).map<ICompletedGame>((set: ICompletedGame) => set);
       }
+
+      this.setState({ masteredSets: sets });
+      this._endInitialLoad();
     });
+  };
+
+  /**
+   * Perform the initial fetching of data from the RetroAchievements APIs.
+   * Once all fetches are complete, update the initial loading state to show the rendered page.
+   */
+  private _performInitialFetch = () => {
+    this._getUserSummary();
+    this._getMasteredGamesList();
   };
 
   /**
    * Is this section being rendered the first section of the sectionOrder array?
    * @param index Index of the sectionOrder array
    */
-  private isFirstSection = (index: number): boolean => {
+  private _isFirstSection = (index: number): boolean => {
     return index === 0;
   };
 
@@ -313,7 +402,13 @@ export class Main extends React.Component<IAppConfig, IMainState> {
    * Is this section being rendered the last section of the sectionOrder array?
    * @param index Index of the sectionOrder array
    */
-  private isLastSection = (index: number): boolean => {
+  private _isLastSection = (index: number): boolean => {
     return index === this.props.sectionOrder.length - 1;
+  };
+
+  private _endInitialLoad = () => {
+    if (this.state.apisToCall > 0) {
+      this.setState({ apisToCall: this.state.apisToCall - 1 });
+    }
   };
 }
