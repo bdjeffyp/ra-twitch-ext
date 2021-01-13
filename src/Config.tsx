@@ -1,18 +1,30 @@
 import { Callout, Checkbox, DirectionalHint, Icon, Stack, TextField } from "@fluentui/react";
 import * as React from "react";
-import { DragDropContext } from "react-beautiful-dnd";
+import {
+  DragDropContext,
+  Draggable,
+  DraggableProvided,
+  DraggableStateSnapshot,
+  Droppable,
+  DroppableProvided,
+  DroppableStateSnapshot,
+  DropResult,
+  ResponderProvided,
+} from "react-beautiful-dnd";
 import { Auth } from "./Auth";
 import * as Styles from "./Config.style";
 import blankKeyImage from "./img/BlankKey.png";
 import { DEFAULT_ACHIEVEMENT_COUNT, DEFAULT_CONFIG, EXT_CONFIG_KEY, Fields, IAppConfig, MAX_ACHIEVEMENTS_TO_SHOW } from "./models";
 import { RA_URL } from "./ra-api";
 import { ConfigSegments, ITwitchAuth, TwitchExtensionHelper } from "./twitch-ext";
+import { validateConfigOptions } from "./utils";
 
 enum ConfigCheckboxes {
   userProfile = "User profile",
   lastGamePlaying = "Last seen playing",
   richPresence = "Rich presence",
   recentAchievements = "Recent achievements list",
+  masteredSets = "Recent mastered sets list",
 }
 
 interface IConfigState extends IAppConfig {
@@ -31,6 +43,7 @@ export class Config extends React.Component<IConfigProps, IConfigState> {
   private _usernameTextFieldError = false;
   private _apiKeyTextFieldError = false;
   private _numAchievementsTextFieldError = false;
+  private _sectionOrder = DEFAULT_CONFIG.sectionOrder;
 
   constructor(props: IConfigProps) {
     super(props);
@@ -68,6 +81,9 @@ export class Config extends React.Component<IConfigProps, IConfigState> {
           config = DEFAULT_CONFIG;
         }
 
+        // If any config options are missing, typically for extension updates, update it!
+        validateConfigOptions(config);
+
         this.setState({
           username: config.username,
           apiKey: config.apiKey,
@@ -76,15 +92,21 @@ export class Config extends React.Component<IConfigProps, IConfigState> {
           showLastGamePlaying: config.showLastGamePlaying,
           showRichPresenceMessage: config.showRichPresenceMessage,
           showRecentAchievementList: config.showRecentAchievementList,
+          showMasteredSetsList: config.showMasteredSetsList,
+          showCompletedWithMastered: config.showCompletedWithMastered,
           sectionOrder: config.sectionOrder,
         });
+
+        // Initialize local section order
+        this._sectionOrder = config.sectionOrder;
       });
     }
   }
 
   public render() {
+    console.log(this._sectionOrder);
     return (
-      <DragDropContext onDragEnd={() => {}}>
+      <>
         <div style={Styles.configContainerStyle()}>
           {/* Instructions section */}
           <div style={Styles.instructionsStyle()}>
@@ -148,6 +170,19 @@ export class Config extends React.Component<IConfigProps, IConfigState> {
               styles={Styles.inputStyle("14.55em", this._numAchievementsTextFieldError)}
             />
           </Stack>
+          {/* Number of mastered sets to show */}
+          <Stack horizontal style={Styles.optionsStackStyle()}>
+            <label htmlFor={Fields.showCompletedWithMastered} style={Styles.labelStyle()}>
+              Show completed (non-hardcore) sets?
+            </label>
+            <Checkbox
+              id={Fields.showCompletedWithMastered}
+              name={Fields.showCompletedWithMastered}
+              checked={this.state.showCompletedWithMastered}
+              onFocus={this._onInputClick}
+              onChange={this._onShowCompletedCheckChange}
+            />
+          </Stack>
           <hr style={Styles.horizontalRuleStyle()} />
           {/* Configure panel appearance */}
           {this._renderDragAndDropSections()}
@@ -179,62 +214,107 @@ export class Config extends React.Component<IConfigProps, IConfigState> {
             <span style={Styles.calloutQuoteStyle()}>"Reset Web API Key"</span> button to get a new key generated.
           </Callout>
         )}
-      </DragDropContext>
+      </>
     );
   }
 
+  private _onDragEnd = (result: DropResult, _: ResponderProvided) => {
+    // Ignore if cancelled
+    if (result.reason === "CANCEL") {
+      return;
+    }
+
+    // Update the order in the state
+  };
+
+  /**
+   * Draw a checkbox for the section container
+   * @param id The ConfigCheckboxes enum value
+   * @param state The boolean state associated with the id
+   */
+  private _renderCheckbox = (id: ConfigCheckboxes, state: boolean): React.ReactNode => {
+    const disabled = id === ConfigCheckboxes.richPresence ? !this.state.showLastGamePlaying : false;
+    const styles = id === ConfigCheckboxes.richPresence ? Styles.checkboxStyle(state, disabled, true) : Styles.checkboxStyle(state);
+    return <Checkbox label={id} checked={state} disabled={disabled} onChange={() => this._onCheckChanged(id)} styles={styles} />;
+  };
+
   private _renderDragAndDropSections = () => {
     return (
-      <>
+      <DragDropContext onDragEnd={this._onDragEnd}>
         Select which sections to display:
-        {/* <Droppable> */}
-        <div id={ConfigCheckboxes.userProfile} style={Styles.sectionContainerStyle()}>
-          <div style={Styles.emulatedStackStyle()}>
-            <Icon iconName="GlobalNavButton" styles={Styles.dragHandleStyle()} />
-            <Checkbox
-              label={ConfigCheckboxes.userProfile}
-              checked={this.state.showUserProfile}
-              onChange={() => this._onCheckChanged(ConfigCheckboxes.userProfile)}
-              styles={Styles.checkboxStyle(this.state.showUserProfile)}
-            />
-          </div>
-        </div>
-        {/* </Droppable> */}
-        <div id={ConfigCheckboxes.lastGamePlaying} style={Styles.sectionContainerStyle()}>
-          <div style={Styles.emulatedStackStyle()}>
-            <Icon iconName="GlobalNavButton" styles={Styles.dragHandleStyle()} />
-            <Stack>
-              <Checkbox
-                label={ConfigCheckboxes.lastGamePlaying}
-                checked={this.state.showLastGamePlaying}
-                onChange={() => this._onCheckChanged(ConfigCheckboxes.lastGamePlaying)}
-                styles={Styles.checkboxStyle(this.state.showLastGamePlaying)}
-              />
-              <div>
-                <Icon iconName="Childof" styles={Styles.childOfStyle()} />
-                <Checkbox
-                  label={ConfigCheckboxes.richPresence}
-                  checked={this.state.showRichPresenceMessage}
-                  disabled={!this.state.showLastGamePlaying}
-                  onChange={() => this._onCheckChanged(ConfigCheckboxes.richPresence)}
-                  styles={Styles.checkboxStyle(this.state.showRichPresenceMessage, !this.state.showLastGamePlaying, true)}
-                />
-              </div>
-            </Stack>
-          </div>
-        </div>
-        <div id={ConfigCheckboxes.recentAchievements} style={Styles.sectionContainerStyle()}>
-          <div style={Styles.emulatedStackStyle()}>
-            <Icon iconName="GlobalNavButton" styles={Styles.dragHandleStyle()} />
-            <Checkbox
-              label={ConfigCheckboxes.recentAchievements}
-              checked={this.state.showRecentAchievementList}
-              onChange={() => this._onCheckChanged(ConfigCheckboxes.recentAchievements)}
-              styles={Styles.checkboxStyle(this.state.showRecentAchievementList)}
-            />
-          </div>
-        </div>
-      </>
+        <Droppable droppableId="sectionsList">
+          {(provided: DroppableProvided, _: DroppableStateSnapshot) => (
+            <div ref={provided.innerRef} {...provided.droppableProps}>
+              <Draggable draggableId={ConfigCheckboxes.userProfile} index={0}>
+                {(provided: DraggableProvided, snapshot: DraggableStateSnapshot) => (
+                  <div
+                    ref={provided.innerRef}
+                    id={ConfigCheckboxes.userProfile}
+                    {...provided.draggableProps}
+                    style={Styles.sectionContainerStyle()}
+                  >
+                    <div style={Styles.emulatedStackStyle()}>
+                      <Icon iconName="GlobalNavButton" {...provided.dragHandleProps} styles={Styles.dragHandleStyle(snapshot)} />
+                      {this._renderCheckbox(ConfigCheckboxes.userProfile, this.state.showUserProfile)}
+                    </div>
+                  </div>
+                )}
+              </Draggable>
+              <Draggable draggableId={ConfigCheckboxes.lastGamePlaying} index={1}>
+                {(provided: DraggableProvided, snapshot: DraggableStateSnapshot) => (
+                  <div
+                    ref={provided.innerRef}
+                    id={ConfigCheckboxes.lastGamePlaying}
+                    {...provided.draggableProps}
+                    style={Styles.sectionContainerStyle()}
+                  >
+                    <div style={Styles.emulatedStackStyle()}>
+                      <Icon iconName="GlobalNavButton" {...provided.dragHandleProps} styles={Styles.dragHandleStyle(snapshot)} />
+                      <Stack>
+                        {this._renderCheckbox(ConfigCheckboxes.lastGamePlaying, this.state.showLastGamePlaying)}
+                        <div>
+                          <Icon iconName="Childof" styles={Styles.childOfStyle()} />
+                          {this._renderCheckbox(ConfigCheckboxes.richPresence, this.state.showRichPresenceMessage)}
+                        </div>
+                      </Stack>
+                    </div>
+                  </div>
+                )}
+              </Draggable>
+              <Draggable draggableId={ConfigCheckboxes.recentAchievements} index={2}>
+                {(provided: DraggableProvided, snapshot: DraggableStateSnapshot) => (
+                  <div
+                    ref={provided.innerRef}
+                    id={ConfigCheckboxes.recentAchievements}
+                    {...provided.draggableProps}
+                    style={Styles.sectionContainerStyle()}
+                  >
+                    <div style={Styles.emulatedStackStyle()}>
+                      <Icon iconName="GlobalNavButton" {...provided.dragHandleProps} styles={Styles.dragHandleStyle(snapshot)} />
+                      {this._renderCheckbox(ConfigCheckboxes.recentAchievements, this.state.showRecentAchievementList)}
+                    </div>
+                  </div>
+                )}
+              </Draggable>
+              <Draggable draggableId={ConfigCheckboxes.masteredSets} index={3}>
+                {(provided: DraggableProvided, snapshot: DraggableStateSnapshot) => (
+                  <div
+                    ref={provided.innerRef}
+                    id={ConfigCheckboxes.masteredSets}
+                    {...provided.draggableProps}
+                    style={Styles.sectionContainerStyle()}
+                  >
+                    <div style={Styles.emulatedStackStyle()}>
+                      <Icon iconName="GlobalNavButton" {...provided.dragHandleProps} styles={Styles.dragHandleStyle(snapshot)} />
+                      {this._renderCheckbox(ConfigCheckboxes.masteredSets, this.state.showMasteredSetsList)}
+                    </div>
+                  </div>
+                )}
+              </Draggable>
+            </div>
+          )}
+        </Droppable>
+      </DragDropContext>
     );
   };
 
@@ -293,21 +373,29 @@ export class Config extends React.Component<IConfigProps, IConfigState> {
     this.setState({ achievementsToShow: newNumber || "" });
   };
 
+  private _validateNumberFromString = (newNumber: string, maxValue: number): boolean => {
+    let validNumber = false;
+
+    if (isNaN(parseInt(newNumber))) {
+      validNumber = false;
+    } else {
+      let value = parseInt(newNumber);
+      if (value > maxValue || value < 1) {
+        validNumber = false;
+      } else {
+        validNumber = true;
+      }
+    }
+
+    return validNumber;
+  };
+
   private _validateNumAchievements = (newNumber: string): string => {
     let validCount = false;
     let errorText = "";
 
     // Validate the change
-    if (isNaN(parseInt(newNumber))) {
-      validCount = false;
-    } else {
-      let value = parseInt(newNumber);
-      if (value > MAX_ACHIEVEMENTS_TO_SHOW || value < 1) {
-        validCount = false;
-      } else {
-        validCount = true;
-      }
-    }
+    validCount = this._validateNumberFromString(newNumber, MAX_ACHIEVEMENTS_TO_SHOW);
 
     // Update the ability to save
     if (validCount) {
@@ -320,6 +408,10 @@ export class Config extends React.Component<IConfigProps, IConfigState> {
     }
     this._updateSaveButtonEnabledState(this._numAchievementsTextFieldError);
     return errorText;
+  };
+
+  private _onShowCompletedCheckChange = (_?: React.FormEvent<HTMLInputElement | HTMLElement>, checked?: boolean) => {
+    this.setState({ showCompletedWithMastered: checked || false });
   };
 
   private _onCheckChanged = (configItem: ConfigCheckboxes) => {
@@ -336,6 +428,8 @@ export class Config extends React.Component<IConfigProps, IConfigState> {
       case ConfigCheckboxes.recentAchievements:
         this.setState({ showRecentAchievementList: !this.state.showRecentAchievementList });
         break;
+      case ConfigCheckboxes.masteredSets:
+        this.setState({ showMasteredSetsList: !this.state.showMasteredSetsList });
     }
 
     // Enable the save button as long as there are no errors
@@ -379,6 +473,8 @@ export class Config extends React.Component<IConfigProps, IConfigState> {
       showLastGamePlaying: this.state.showLastGamePlaying,
       showRichPresenceMessage: this.state.showRichPresenceMessage,
       showRecentAchievementList: this.state.showRecentAchievementList,
+      showMasteredSetsList: this.state.showMasteredSetsList,
+      showCompletedWithMastered: this.state.showCompletedWithMastered,
       sectionOrder: this.state.sectionOrder,
     };
     if (this._twitch) {

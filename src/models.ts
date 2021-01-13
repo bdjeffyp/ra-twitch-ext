@@ -3,12 +3,14 @@ export enum Fields {
   username = "username",
   apiKey = "apiKey",
   numAchievementsToShow = "numAchievementsToShow",
+  showCompletedWithMastered = "showCompletedWithMastered",
 }
 
 export enum Sections {
   userProfile,
   lastGame,
   recentAchievements,
+  masteredSets,
 }
 
 ////// Interfaces //////
@@ -20,6 +22,8 @@ export interface IAppConfig {
   showLastGamePlaying: boolean;
   showRichPresenceMessage: boolean;
   showRecentAchievementList: boolean;
+  showMasteredSetsList: boolean;
+  showCompletedWithMastered: boolean;
   sectionOrder: Sections[];
 }
 
@@ -27,7 +31,7 @@ export interface IAppConfig {
 // TODO: Determine actual max value. 30 seems good so far...
 export const MAX_ACHIEVEMENTS_TO_SHOW = 30;
 
-// Default number of achievements to display
+// Default number of recent achievements to display
 export const DEFAULT_ACHIEVEMENT_COUNT = 5;
 
 export const DEFAULT_CONFIG: IAppConfig = {
@@ -38,6 +42,8 @@ export const DEFAULT_CONFIG: IAppConfig = {
   showLastGamePlaying: true,
   showRichPresenceMessage: true,
   showRecentAchievementList: true,
+  showMasteredSetsList: true,
+  showCompletedWithMastered: false,
   sectionOrder: [Sections.userProfile, Sections.lastGame, Sections.recentAchievements],
 };
 

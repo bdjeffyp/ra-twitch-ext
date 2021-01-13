@@ -1,5 +1,6 @@
 import { ICalloutContentStyles, ICheckboxStyles, IIconStyles, ITextFieldStyles } from "@fluentui/react";
 import * as React from "react";
+import { DraggableStateSnapshot } from "react-beautiful-dnd";
 
 const goldColor = "#CC9900";
 const lightBlueColor = "#2C97FA";
@@ -126,13 +127,14 @@ export const emulatedStackStyle = (): React.CSSProperties => {
   };
 };
 
-export const dragHandleStyle = (): Partial<IIconStyles> => {
+export const dragHandleStyle = (dragSnapshot: DraggableStateSnapshot): Partial<IIconStyles> => {
+  const isDragging = dragSnapshot.isDragging;
   return {
     root: {
       width: "1rem",
       height: "1rem",
       fontSize: "1rem",
-      cursor: "grab",
+      cursor: isDragging ? "grabbing" : "grab",
       display: "flex",
       alignSelf: "center",
     },

@@ -4,11 +4,14 @@ import { Auth } from "./Auth";
 import { Main } from "./Main";
 import { DEFAULT_CONFIG, IAppConfig } from "./models";
 import { ITwitchAuth, TwitchExtensionHelper } from "./twitch-ext";
+import { validateConfigOptions } from "./utils";
 
 interface IAppState extends IAppConfig {
   finishedLoading: boolean;
 }
-interface IAppProps {}
+interface IAppProps {
+  nonce: string;
+}
 
 /**
  * Main panel entry point. Responsible for setting up Twitch extension helper and fetching config.
@@ -66,6 +69,9 @@ class App extends React.Component<IAppProps, IAppState> {
       config = DEFAULT_CONFIG;
     }
 
+    // Ensure each property of the config is initialized with default values if undefined
+    validateConfigOptions(config);
+
     this.setState({
       username: config.username,
       apiKey: config.apiKey,
@@ -74,6 +80,8 @@ class App extends React.Component<IAppProps, IAppState> {
       showLastGamePlaying: config.showLastGamePlaying,
       showRichPresenceMessage: config.showRichPresenceMessage,
       showRecentAchievementList: config.showRecentAchievementList,
+      showMasteredSetsList: config.showMasteredSetsList,
+      showCompletedWithMastered: config.showCompletedWithMastered,
     });
   };
 }

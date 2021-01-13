@@ -3,7 +3,7 @@ import DayJs from "dayjs";
 import * as React from "react";
 import * as Styles from "./Main.style";
 import { DEFAULT_ACHIEVEMENT_COUNT, IAppConfig, Sections } from "./models";
-import { IAchievement, IApiProps, IUserSummary, RA_URL, RetroAchievementsApi } from "./ra-api";
+import { IAchievement, IApiProps, ICompletedGame, IUserSummary, RA_URL, RetroAchievementsApi } from "./ra-api";
 
 interface IMainState {
   failstate: boolean;
@@ -22,6 +22,7 @@ interface IMainState {
   showLastGamePlaying: boolean;
   showRichPresenceMessage: boolean;
   showRecentAchievementList: boolean;
+  showMasteredSetsList: boolean;
   sectionOrder: Sections[];
 }
 
@@ -55,6 +56,7 @@ export class Main extends React.Component<IAppConfig, IMainState> {
       showLastGamePlaying: true,
       showRichPresenceMessage: true,
       showRecentAchievementList: true,
+      showMasteredSetsList: true,
       sectionOrder: [],
     };
   }
@@ -66,15 +68,18 @@ export class Main extends React.Component<IAppConfig, IMainState> {
       showLastGamePlaying: this.props.showLastGamePlaying,
       showRichPresenceMessage: this.props.showRichPresenceMessage,
       showRecentAchievementList: this.props.showRecentAchievementList,
+      showMasteredSetsList: this.props.showMasteredSetsList,
     });
 
-    // Get the data for the panel from Retro Achievements and kick off the periodic fetching sequence
-    this._userSummary();
+    // Get the data for the panel from RetroAchievements and kick off the periodic fetching sequence
+    this._getUserSummary();
+    this._getMasteredGamesList();
   }
 
   public render() {
     return (
       <div style={Styles.mainContainerStyle()}>
+        Remove me!
         {this.state.initialLoading && !this.state.failstate && (
           <Spinner size={SpinnerSize.large} label="Loading" style={Styles.loadingSpinnerStyle()}></Spinner>
         )}
@@ -228,24 +233,12 @@ export class Main extends React.Component<IAppConfig, IMainState> {
     });
   };
 
-  private _userSummary = () => {
+  private _getUserSummary = () => {
     // Get data from the number of games equivalent to number achievements user wants to show
     // If each game only has one recent achievement, then we are still getting the right number of achievements to show.
 
     // As a fallback, in case the setting is somehow set to 0, we will fetch DEFAULT_ACHIEVEMENT_COUNT by default to avoid an error.
     const count = this.props.numAchievementsToShow === 0 ? DEFAULT_ACHIEVEMENT_COUNT : this.props.numAchievementsToShow;
-
-    // Making other calls to see what the data responses are
-    // this._ra.getConsoleIds();
-    // this._ra.getExtendedGameInfo("504");
-    // this._ra.getFeed(5, 0); // failed... doesn't seem to be supported any more
-    // this._ra.getGameInfo("504");
-    // this._ra.getGamesList("4");
-    // this._ra.getProgress("504");
-    // this._ra.getRankAndScore();
-    // this._ra.getRecentGames(5, 0);
-    // this._ra.getTopTenUsers();
-    // this._ra.getUserGameProgress("504");
 
     this._ra.getSummary(count).then((response: IUserSummary) => {
       if (response.hasErrorResponse) {
@@ -282,7 +275,30 @@ export class Main extends React.Component<IAppConfig, IMainState> {
     });
 
     // Set the interval to call this again in one minute!
-    setTimeout(this._userSummary, 60000);
+    setTimeout(this._getUserSummary, 60000);
+  };
+
+  /**
+   * Retrieves the list of games this user has mastered AND completed. This logic then returns the sets that are mastered but will only
+   * return any completed (non-hardcore) sets if that option is set in the extension config options, and ONLY if there isn't a mastered
+   * set already associated with the game.
+   */
+  private _getMasteredGamesList = () => {
+    this._ra.getUserCompletedGames().then((response: ICompletedGame[]) => {
+      if (response[0].hasErrorResponse) {
+        return this.setState({ failstate: true, errorMessage: response[0].errorMessage });
+      }
+
+      // Process the sets before saving in the state
+      console.log(response);
+      let sets: ICompletedGame[] = [];
+      if (!this.props.showCompletedWithMastered) {
+        // Remove all entries with hardcore mode off
+        sets = response.filter((set: ICompletedGame) => set.hardcoreMode === true);
+      } else {
+        // Keep hardcore mode off entries that don't have a matching set with hardcore mode on
+      }
+    });
   };
 
   /**
