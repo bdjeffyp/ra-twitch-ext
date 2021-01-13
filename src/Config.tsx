@@ -181,6 +181,7 @@ export class Config extends React.Component<IConfigProps, IConfigState> {
               checked={this.state.showCompletedWithMastered}
               onFocus={this._onInputClick}
               onChange={this._onShowCompletedCheckChange}
+              styles={Styles.completedSetsCheckboxStyle(this.state.showCompletedWithMastered)}
             />
           </Stack>
           <hr style={Styles.horizontalRuleStyle()} />
@@ -411,7 +412,11 @@ export class Config extends React.Component<IConfigProps, IConfigState> {
   };
 
   private _onShowCompletedCheckChange = (_?: React.FormEvent<HTMLInputElement | HTMLElement>, checked?: boolean) => {
-    this.setState({ showCompletedWithMastered: checked || false });
+    this.setState({
+      showCompletedWithMastered: checked || false,
+      saveButtonEnabled: !this.state.hasTextFieldError && true,
+      changesSavedIndicator: false,
+    });
   };
 
   private _onCheckChanged = (configItem: ConfigCheckboxes) => {
@@ -438,7 +443,6 @@ export class Config extends React.Component<IConfigProps, IConfigState> {
     }
 
     // TODO: THIS NEEDS TO BE FIXED!!
-
     // If all checkboxes (user profile, last game, and recent achievements) are unchecked, disable the save button
     if (!this.state.showUserProfile && !this.state.showLastGamePlaying && !this.state.showRecentAchievementList) {
       this._updateSaveButtonEnabledState(true);

@@ -1,4 +1,4 @@
-import { ICalloutContentStyles, ICheckboxStyles, IIconStyles, ITextFieldStyles } from "@fluentui/react";
+import { concatStyleSets, ICalloutContentStyles, ICheckboxStyles, IIconStyles, ITextFieldStyles } from "@fluentui/react";
 import * as React from "react";
 import { DraggableStateSnapshot } from "react-beautiful-dnd";
 
@@ -187,6 +187,15 @@ export const checkboxStyle = (checked: boolean, disabled?: boolean, childCheckbo
         },
     ],
   };
+};
+
+export const completedSetsCheckboxStyle = (checked: boolean): Partial<ICheckboxStyles> => {
+  const updatedStyle: Partial<ICheckboxStyles> = {
+    root: {
+      alignSelf: "center",
+    },
+  };
+  return concatStyleSets(updatedStyle, checkboxStyle(checked));
 };
 
 export const buttonInputStyle = (): React.CSSProperties => {
