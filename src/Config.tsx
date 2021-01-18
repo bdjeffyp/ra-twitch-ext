@@ -1,31 +1,29 @@
-import { Callout, Checkbox, DirectionalHint, Icon, Stack, TextField } from "@fluentui/react";
+import { Callout, Checkbox, DirectionalHint, Stack, TextField } from "@fluentui/react";
 import * as React from "react";
-import {
-  DragDropContext,
-  Draggable,
-  DraggableProvided,
-  DraggableStateSnapshot,
-  Droppable,
-  DroppableProvided,
-  DroppableStateSnapshot,
-  DropResult,
-  ResponderProvided,
-} from "react-beautiful-dnd";
+import { DndProvider } from "react-dnd";
+import { HTML5Backend } from "react-dnd-html5-backend";
 import { Auth } from "./Auth";
 import * as Styles from "./Config.style";
+import { DraggableSection } from "./DraggableSection";
 import blankKeyImage from "./img/BlankKey.png";
-import { DEFAULT_ACHIEVEMENT_COUNT, DEFAULT_CONFIG, EXT_CONFIG_KEY, Fields, IAppConfig, MAX_ACHIEVEMENTS_TO_SHOW } from "./models";
+import {
+  ConfigCheckboxes,
+  DEFAULT_ACHIEVEMENT_COUNT,
+  DEFAULT_CONFIG,
+  DEFAULT_SHOW_LAST_GAME,
+  DEFAULT_SHOW_MASTERED_SETS,
+  DEFAULT_SHOW_RECENT_ACHIEVEMENTS,
+  DEFAULT_SHOW_RICH_PRESENCE,
+  DEFAULT_SHOW_USER_PROFILE,
+  EXT_CONFIG_KEY,
+  Fields,
+  IAppConfig,
+  ISections,
+  MAX_ACHIEVEMENTS_TO_SHOW,
+} from "./models";
 import { RA_URL } from "./ra-api";
 import { ConfigSegments, ITwitchAuth, TwitchExtensionHelper } from "./twitch-ext";
-import { validateConfigOptions } from "./utils";
-
-enum ConfigCheckboxes {
-  userProfile = "User profile",
-  lastGamePlaying = "Last seen playing",
-  richPresence = "Rich presence",
-  recentAchievements = "Recent achievements list",
-  masteredSets = "Recent mastered sets list",
-}
+import { getSectionIndex, getSectionSetting, validateConfigOptions } from "./utils";
 
 interface IConfigState extends IAppConfig {
   achievementsToShow: string;
@@ -34,6 +32,11 @@ interface IConfigState extends IAppConfig {
   saveButtonEnabled: boolean;
   isApiKeyCalloutVisible: boolean;
   hasTextFieldError: boolean;
+  showUserProfile: boolean;
+  showLastGamePlaying: boolean;
+  showRichPresenceMessage: boolean;
+  showRecentAchievementList: boolean;
+  showMasteredSetsList: boolean;
 }
 interface IConfigProps {}
 
@@ -43,7 +46,6 @@ export class Config extends React.Component<IConfigProps, IConfigState> {
   private _usernameTextFieldError = false;
   private _apiKeyTextFieldError = false;
   private _numAchievementsTextFieldError = false;
-  private _sectionOrder = DEFAULT_CONFIG.sectionOrder;
 
   constructor(props: IConfigProps) {
     super(props);
@@ -59,6 +61,11 @@ export class Config extends React.Component<IConfigProps, IConfigState> {
       saveButtonEnabled: false,
       isApiKeyCalloutVisible: false,
       hasTextFieldError: false,
+      showUserProfile: DEFAULT_SHOW_USER_PROFILE,
+      showLastGamePlaying: DEFAULT_SHOW_LAST_GAME,
+      showRichPresenceMessage: DEFAULT_SHOW_RICH_PRESENCE,
+      showRecentAchievementList: DEFAULT_SHOW_RECENT_ACHIEVEMENTS,
+      showMasteredSetsList: DEFAULT_SHOW_MASTERED_SETS,
     };
   }
 
@@ -84,27 +91,33 @@ export class Config extends React.Component<IConfigProps, IConfigState> {
         // If any config options are missing, typically for extension updates, update it!
         validateConfigOptions(config);
 
+        // Update the state
+        const sections = config.sections;
         this.setState({
           username: config.username,
           apiKey: config.apiKey,
           achievementsToShow: config.numAchievementsToShow.toString(),
-          showUserProfile: config.showUserProfile,
-          showLastGamePlaying: config.showLastGamePlaying,
-          showRichPresenceMessage: config.showRichPresenceMessage,
-          showRecentAchievementList: config.showRecentAchievementList,
-          showMasteredSetsList: config.showMasteredSetsList,
           showCompletedWithMastered: config.showCompletedWithMastered,
-          sectionOrder: config.sectionOrder,
+          sections: sections,
+          // Split out the state from the ISections objects while we work
+          showUserProfile: getSectionSetting(ConfigCheckboxes.userProfile, sections) || DEFAULT_SHOW_USER_PROFILE,
+          showLastGamePlaying: getSectionSetting(ConfigCheckboxes.lastGamePlaying, sections) || DEFAULT_SHOW_LAST_GAME,
+          showRichPresenceMessage: getSectionSetting(ConfigCheckboxes.richPresence, sections) || DEFAULT_SHOW_RICH_PRESENCE,
+          showRecentAchievementList: getSectionSetting(ConfigCheckboxes.recentAchievements, sections) || DEFAULT_SHOW_RECENT_ACHIEVEMENTS,
+          showMasteredSetsList: getSectionSetting(ConfigCheckboxes.masteredSets, sections) || DEFAULT_SHOW_MASTERED_SETS,
         });
-
-        // Initialize local section order
-        this._sectionOrder = config.sectionOrder;
       });
     }
   }
 
   public render() {
-    console.log(this._sectionOrder);
+    // Set up a working copy of the section order array and indexes
+    const sections = this.state.sections;
+    const userProfileIndex = getSectionIndex(ConfigCheckboxes.userProfile, sections);
+    const lastGameIndex = getSectionIndex(ConfigCheckboxes.lastGamePlaying, sections);
+    const recentAchievementsIndex = getSectionIndex(ConfigCheckboxes.recentAchievements, sections);
+    const masteredSetsIndex = getSectionIndex(ConfigCheckboxes.masteredSets, sections);
+
     return (
       <>
         <div style={Styles.configContainerStyle()}>
@@ -185,8 +198,35 @@ export class Config extends React.Component<IConfigProps, IConfigState> {
             />
           </Stack>
           <hr style={Styles.horizontalRuleStyle()} />
-          {/* Configure panel appearance */}
-          {this._renderDragAndDropSections()}
+          {/* Configure panel appearance with drag and drop sections */}
+          {sections && (
+            <DndProvider backend={HTML5Backend}>
+              <DraggableSection
+                id={sections[userProfileIndex].text}
+                sectionCard={sections[userProfileIndex]}
+                renderCheckbox={this._renderCheckbox}
+                initialIndex={userProfileIndex}
+              />
+              <DraggableSection
+                id={sections[lastGameIndex].text}
+                sectionCard={sections[lastGameIndex]}
+                renderCheckbox={this._renderCheckbox}
+                initialIndex={lastGameIndex}
+              />
+              <DraggableSection
+                id={sections[recentAchievementsIndex].text}
+                sectionCard={sections[recentAchievementsIndex]}
+                renderCheckbox={this._renderCheckbox}
+                initialIndex={recentAchievementsIndex}
+              />
+              <DraggableSection
+                id={sections[masteredSetsIndex].text}
+                sectionCard={sections[masteredSetsIndex]}
+                renderCheckbox={this._renderCheckbox}
+                initialIndex={masteredSetsIndex}
+              />
+            </DndProvider>
+          )}
           {/* Save button and status */}
           <button type="submit" disabled={!this.state.saveButtonEnabled} onClick={this._saveConfig} style={Styles.buttonInputStyle()}>
             Save
@@ -218,106 +258,6 @@ export class Config extends React.Component<IConfigProps, IConfigState> {
       </>
     );
   }
-
-  private _onDragEnd = (result: DropResult, _: ResponderProvided) => {
-    // Ignore if cancelled
-    if (result.reason === "CANCEL") {
-      return;
-    }
-
-    // Update the order in the state
-  };
-
-  /**
-   * Draw a checkbox for the section container
-   * @param id The ConfigCheckboxes enum value
-   * @param state The boolean state associated with the id
-   */
-  private _renderCheckbox = (id: ConfigCheckboxes, state: boolean): React.ReactNode => {
-    const disabled = id === ConfigCheckboxes.richPresence ? !this.state.showLastGamePlaying : false;
-    const styles = id === ConfigCheckboxes.richPresence ? Styles.checkboxStyle(state, disabled, true) : Styles.checkboxStyle(state);
-    return <Checkbox label={id} checked={state} disabled={disabled} onChange={() => this._onCheckChanged(id)} styles={styles} />;
-  };
-
-  private _renderDragAndDropSections = () => {
-    return (
-      <DragDropContext onDragEnd={this._onDragEnd}>
-        Select which sections to display:
-        <Droppable droppableId="sectionsList">
-          {(provided: DroppableProvided, _: DroppableStateSnapshot) => (
-            <div ref={provided.innerRef} {...provided.droppableProps}>
-              <Draggable draggableId={ConfigCheckboxes.userProfile} index={0}>
-                {(provided: DraggableProvided, snapshot: DraggableStateSnapshot) => (
-                  <div
-                    ref={provided.innerRef}
-                    id={ConfigCheckboxes.userProfile}
-                    {...provided.draggableProps}
-                    style={Styles.sectionContainerStyle()}
-                  >
-                    <div style={Styles.emulatedStackStyle()}>
-                      <Icon iconName="GlobalNavButton" {...provided.dragHandleProps} styles={Styles.dragHandleStyle(snapshot)} />
-                      {this._renderCheckbox(ConfigCheckboxes.userProfile, this.state.showUserProfile)}
-                    </div>
-                  </div>
-                )}
-              </Draggable>
-              <Draggable draggableId={ConfigCheckboxes.lastGamePlaying} index={1}>
-                {(provided: DraggableProvided, snapshot: DraggableStateSnapshot) => (
-                  <div
-                    ref={provided.innerRef}
-                    id={ConfigCheckboxes.lastGamePlaying}
-                    {...provided.draggableProps}
-                    style={Styles.sectionContainerStyle()}
-                  >
-                    <div style={Styles.emulatedStackStyle()}>
-                      <Icon iconName="GlobalNavButton" {...provided.dragHandleProps} styles={Styles.dragHandleStyle(snapshot)} />
-                      <Stack>
-                        {this._renderCheckbox(ConfigCheckboxes.lastGamePlaying, this.state.showLastGamePlaying)}
-                        <div>
-                          <Icon iconName="Childof" styles={Styles.childOfStyle()} />
-                          {this._renderCheckbox(ConfigCheckboxes.richPresence, this.state.showRichPresenceMessage)}
-                        </div>
-                      </Stack>
-                    </div>
-                  </div>
-                )}
-              </Draggable>
-              <Draggable draggableId={ConfigCheckboxes.recentAchievements} index={2}>
-                {(provided: DraggableProvided, snapshot: DraggableStateSnapshot) => (
-                  <div
-                    ref={provided.innerRef}
-                    id={ConfigCheckboxes.recentAchievements}
-                    {...provided.draggableProps}
-                    style={Styles.sectionContainerStyle()}
-                  >
-                    <div style={Styles.emulatedStackStyle()}>
-                      <Icon iconName="GlobalNavButton" {...provided.dragHandleProps} styles={Styles.dragHandleStyle(snapshot)} />
-                      {this._renderCheckbox(ConfigCheckboxes.recentAchievements, this.state.showRecentAchievementList)}
-                    </div>
-                  </div>
-                )}
-              </Draggable>
-              <Draggable draggableId={ConfigCheckboxes.masteredSets} index={3}>
-                {(provided: DraggableProvided, snapshot: DraggableStateSnapshot) => (
-                  <div
-                    ref={provided.innerRef}
-                    id={ConfigCheckboxes.masteredSets}
-                    {...provided.draggableProps}
-                    style={Styles.sectionContainerStyle()}
-                  >
-                    <div style={Styles.emulatedStackStyle()}>
-                      <Icon iconName="GlobalNavButton" {...provided.dragHandleProps} styles={Styles.dragHandleStyle(snapshot)} />
-                      {this._renderCheckbox(ConfigCheckboxes.masteredSets, this.state.showMasteredSetsList)}
-                    </div>
-                  </div>
-                )}
-              </Draggable>
-            </div>
-          )}
-        </Droppable>
-      </DragDropContext>
-    );
-  };
 
   private _onInputClick = () => {
     this.setState({ changesSavedIndicator: false });
@@ -419,6 +359,17 @@ export class Config extends React.Component<IConfigProps, IConfigState> {
     });
   };
 
+  /**
+   * Draw a checkbox for the section container
+   * @param id The ConfigCheckboxes enum value
+   * @param checked The boolean state associated with the id
+   */
+  private _renderCheckbox = (id: ConfigCheckboxes, checked: boolean): React.ReactNode => {
+    const disabled = id === ConfigCheckboxes.richPresence ? !this.state.showLastGamePlaying : false;
+    const styles = id === ConfigCheckboxes.richPresence ? Styles.checkboxStyle(checked, disabled, true) : Styles.checkboxStyle(checked);
+    return <Checkbox label={id} checked={checked} disabled={disabled} onChange={() => this._onCheckChanged(id)} styles={styles} />;
+  };
+
   private _onCheckChanged = (configItem: ConfigCheckboxes) => {
     switch (configItem) {
       case ConfigCheckboxes.userProfile:
@@ -469,17 +420,25 @@ export class Config extends React.Component<IConfigProps, IConfigState> {
       return;
     }
 
+    // Place the section states back into their ISections objects
+    const sections = this.state.sections;
+    this._updateSectionState(ConfigCheckboxes.userProfile, sections, this.state.showUserProfile);
+    this._updateSectionState(
+      ConfigCheckboxes.lastGamePlaying,
+      sections,
+      this.state.showLastGamePlaying,
+      this.state.showRichPresenceMessage
+    );
+    this._updateSectionState(ConfigCheckboxes.recentAchievements, sections, this.state.showRecentAchievementList);
+    this._updateSectionState(ConfigCheckboxes.masteredSets, sections, this.state.showMasteredSetsList);
+
+    // Now update the config with Twitch!
     const config: IAppConfig = {
       username: this.state.username,
       apiKey: this.state.apiKey,
       numAchievementsToShow: parseInt(this.state.achievementsToShow),
-      showUserProfile: this.state.showUserProfile,
-      showLastGamePlaying: this.state.showLastGamePlaying,
-      showRichPresenceMessage: this.state.showRichPresenceMessage,
-      showRecentAchievementList: this.state.showRecentAchievementList,
-      showMasteredSetsList: this.state.showMasteredSetsList,
       showCompletedWithMastered: this.state.showCompletedWithMastered,
-      sectionOrder: this.state.sectionOrder,
+      sections: sections,
     };
     if (this._twitch) {
       this._twitch.configuration.set(ConfigSegments.broadcaster, EXT_CONFIG_KEY, JSON.stringify(config));
@@ -488,5 +447,32 @@ export class Config extends React.Component<IConfigProps, IConfigState> {
       // TODO: Display some sort of error on the config page...
       console.log("Twitch extension helper is not loaded...");
     }
+  };
+
+  /**
+   * Updates the sectionOrder array passed in with the checked state, if the index is found, otherwise does nothing.
+   * @param id The `ConfigCheckboxes` identifier for the state
+   * @param sectionOrder The `ISections` array to update
+   * @param checked The state being updated
+   * @param childChecked The section's child state being updated
+   */
+  private _updateSectionState = (id: ConfigCheckboxes, sectionOrder: ISections[], checked: boolean, childChecked?: boolean) => {
+    const index = getSectionIndex(id, sectionOrder);
+    if (index >= 0) {
+      sectionOrder[index].checked = checked;
+      if (sectionOrder[index].childChecked !== undefined && childChecked) {
+        // Update the child as well
+        sectionOrder[index].childChecked = childChecked;
+      }
+    }
+  };
+
+  private _findSectionCard = (id: string) => {
+    const card = this.state.sections.filter((section: ISections) => section.text === id)[0];
+    return { card, index: this.state.sections.indexOf(card) };
+  };
+
+  private _moveSectionCard = (id: string, atIndex: number) => {
+    const { card, index } = this._findSectionCard(id);
   };
 }

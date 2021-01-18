@@ -2,8 +2,19 @@ import { Spinner, SpinnerSize, Stack } from "@fluentui/react";
 import DayJs from "dayjs";
 import * as React from "react";
 import * as Styles from "./Main.style";
-import { DEFAULT_ACHIEVEMENT_COUNT, IAppConfig, Sections } from "./models";
+import {
+  ConfigCheckboxes,
+  DEFAULT_ACHIEVEMENT_COUNT,
+  DEFAULT_SHOW_LAST_GAME,
+  DEFAULT_SHOW_MASTERED_SETS,
+  DEFAULT_SHOW_RECENT_ACHIEVEMENTS,
+  DEFAULT_SHOW_RICH_PRESENCE,
+  DEFAULT_SHOW_USER_PROFILE,
+  IAppConfig,
+  ISections,
+} from "./models";
 import { IAchievement, IApiProps, ICompletedGame, IUserSummary, RA_URL, RetroAchievementsApi } from "./ra-api";
+import { getSectionSetting } from "./utils";
 
 interface IMainState {
   failstate: boolean;
@@ -24,7 +35,7 @@ interface IMainState {
   showRichPresenceMessage: boolean;
   showRecentAchievementList: boolean;
   showMasteredSetsList: boolean;
-  sectionOrder: Sections[];
+  sectionOrder: ISections[];
 }
 
 export class Main extends React.Component<IAppConfig, IMainState> {
@@ -64,13 +75,14 @@ export class Main extends React.Component<IAppConfig, IMainState> {
   }
 
   public componentDidMount() {
-    // Set the layout customization
+    // Set the layout customization if settings are found. Reverts to the defaults if not available.
+    const sections = this.props.sections;
     this.setState({
-      showUserProfile: this.props.showUserProfile,
-      showLastGamePlaying: this.props.showLastGamePlaying,
-      showRichPresenceMessage: this.props.showRichPresenceMessage,
-      showRecentAchievementList: this.props.showRecentAchievementList,
-      showMasteredSetsList: this.props.showMasteredSetsList,
+      showUserProfile: getSectionSetting(ConfigCheckboxes.userProfile, sections) || DEFAULT_SHOW_USER_PROFILE,
+      showLastGamePlaying: getSectionSetting(ConfigCheckboxes.lastGamePlaying, sections) || DEFAULT_SHOW_LAST_GAME,
+      showRichPresenceMessage: getSectionSetting(ConfigCheckboxes.richPresence, sections) || DEFAULT_SHOW_RICH_PRESENCE,
+      showRecentAchievementList: getSectionSetting(ConfigCheckboxes.recentAchievements, sections) || DEFAULT_SHOW_RECENT_ACHIEVEMENTS,
+      showMasteredSetsList: getSectionSetting(ConfigCheckboxes.masteredSets, sections) || DEFAULT_SHOW_MASTERED_SETS,
     });
 
     // Get the data for the panel from RetroAchievements and kick off the periodic fetching sequence
@@ -147,7 +159,7 @@ export class Main extends React.Component<IAppConfig, IMainState> {
 
     return (
       <Stack
-        key={`${index}: ${Sections.userProfile}`}
+        key={`${index}: ${ConfigCheckboxes.userProfile}`}
         style={Styles.profileContainerStyle(this._isFirstSection(index), this._isLastSection(index))}
       >
         <Stack horizontal>
@@ -176,7 +188,7 @@ export class Main extends React.Component<IAppConfig, IMainState> {
    */
   private _renderLastGamePlaying = (index: number): React.ReactNode => {
     return (
-      <Stack key={`${index}: ${Sections.lastGame}`} style={Styles.lastGamePlayingContainerStyle(this._isLastSection(index))}>
+      <Stack key={`${index}: ${ConfigCheckboxes.lastGamePlaying}`} style={Styles.lastGamePlayingContainerStyle(this._isLastSection(index))}>
         <div>
           <span>Last seen playing: </span>
           <a href={this.state.lastGameUrl} target="_blank" rel="noopener noreferrer" style={Styles.lastGameTitleStyle()}>
@@ -194,7 +206,10 @@ export class Main extends React.Component<IAppConfig, IMainState> {
    */
   private _renderRecentAchievements = (index: number): React.ReactNode => {
     return (
-      <div key={`${index}: ${Sections.recentAchievements}`} style={Styles.recentAchievementsContainerStyle(this._isLastSection(index))}>
+      <div
+        key={`${index}: ${ConfigCheckboxes.recentAchievements}`}
+        style={Styles.recentAchievementsContainerStyle(this._isLastSection(index))}
+      >
         {this.state.recentAchievements.length > 0 && (
           <Stack>
             Recent achievement(s):
@@ -237,7 +252,7 @@ export class Main extends React.Component<IAppConfig, IMainState> {
    */
   private _renderMasteredSets = (index: number): React.ReactNode => {
     return (
-      <div key={`${index}: ${Sections.masteredSets}`} style={Styles.masteredSetsContainerStyle(this._isLastSection(index))}>
+      <div key={`${index}: ${ConfigCheckboxes.masteredSets}`} style={Styles.masteredSetsContainerStyle(this._isLastSection(index))}>
         {this.state.masteredSets.length > 0 && (
           <Stack>
             Mastered sets:
@@ -274,16 +289,16 @@ export class Main extends React.Component<IAppConfig, IMainState> {
    * Render sections based on the order defined by the configuration
    */
   private _renderPanelSections = (): React.ReactNode[] => {
-    return this.props.sectionOrder.map((section: Sections, index: number) => {
-      switch (section) {
-        case Sections.userProfile:
-          return this._renderUserProfileInfo(index);
-        case Sections.lastGame:
-          return this._renderLastGamePlaying(index);
-        case Sections.recentAchievements:
-          return this._renderRecentAchievements(index);
-        case Sections.masteredSets:
-          return this._renderMasteredSets(index);
+    return this.props.sections.map((section: ISections, index: number) => {
+      switch (section.text) {
+        case ConfigCheckboxes.userProfile:
+          return this.state.showUserProfile && this._renderUserProfileInfo(index);
+        case ConfigCheckboxes.lastGamePlaying:
+          return this.state.showLastGamePlaying && this._renderLastGamePlaying(index);
+        case ConfigCheckboxes.recentAchievements:
+          return this.state.showRecentAchievementList && this._renderRecentAchievements(index);
+        case ConfigCheckboxes.masteredSets:
+          return this.state.showMasteredSetsList && this._renderMasteredSets(index);
         default:
           return <div key={"unknown"}>BUG: An invalid section</div>;
       }
@@ -403,7 +418,7 @@ export class Main extends React.Component<IAppConfig, IMainState> {
    * @param index Index of the sectionOrder array
    */
   private _isLastSection = (index: number): boolean => {
-    return index === this.props.sectionOrder.length - 1;
+    return index === this.props.sections.length - 1;
   };
 
   private _endInitialLoad = () => {

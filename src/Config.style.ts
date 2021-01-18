@@ -1,6 +1,5 @@
 import { concatStyleSets, ICalloutContentStyles, ICheckboxStyles, IIconStyles, ITextFieldStyles } from "@fluentui/react";
 import * as React from "react";
-import { DraggableStateSnapshot } from "react-beautiful-dnd";
 
 const goldColor = "#CC9900";
 const lightBlueColor = "#2C97FA";
@@ -106,7 +105,7 @@ export const linkStyle = (): React.CSSProperties => {
   };
 };
 
-export const sectionContainerStyle = (): React.CSSProperties => {
+export const sectionContainerStyle = (opacity: number): React.CSSProperties => {
   return {
     backgroundColor: "#1b1e24",
     border: "1px solid black",
@@ -114,6 +113,7 @@ export const sectionContainerStyle = (): React.CSSProperties => {
     padding: "0.5em",
     margin: "5px 0",
     maxWidth: "300px",
+    opacity: opacity,
   };
 };
 
@@ -127,8 +127,7 @@ export const emulatedStackStyle = (): React.CSSProperties => {
   };
 };
 
-export const dragHandleStyle = (dragSnapshot: DraggableStateSnapshot): Partial<IIconStyles> => {
-  const isDragging = dragSnapshot.isDragging;
+export const dragHandleStyle = (isDragging: boolean): Partial<IIconStyles> => {
   return {
     root: {
       width: "1rem",

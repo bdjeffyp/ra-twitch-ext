@@ -1,4 +1,4 @@
-import { DEFAULT_CONFIG, IAppConfig } from "./models";
+import { ConfigCheckboxes, DEFAULT_CONFIG, IAppConfig, ISections } from "./models";
 
 /**
  * Checks each option to ensure that it exists. If it doesn't, a default value is provided.
@@ -8,18 +8,28 @@ import { DEFAULT_CONFIG, IAppConfig } from "./models";
 export const validateConfigOptions = (config: IAppConfig): IAppConfig => {
   config.apiKey = config.apiKey ? config.apiKey : DEFAULT_CONFIG.apiKey;
   config.numAchievementsToShow = config.numAchievementsToShow ? config.numAchievementsToShow : DEFAULT_CONFIG.numAchievementsToShow;
-  config.sectionOrder = config.sectionOrder ? config.sectionOrder : DEFAULT_CONFIG.sectionOrder;
   config.showCompletedWithMastered = config.showCompletedWithMastered
     ? config.showCompletedWithMastered
     : DEFAULT_CONFIG.showCompletedWithMastered;
-  config.showLastGamePlaying = config.showLastGamePlaying ? config.showLastGamePlaying : DEFAULT_CONFIG.showLastGamePlaying;
-  config.showRecentAchievementList = config.showRecentAchievementList
-    ? config.showRecentAchievementList
-    : DEFAULT_CONFIG.showRecentAchievementList;
-  config.showMasteredSetsList = config.showMasteredSetsList ? config.showMasteredSetsList : DEFAULT_CONFIG.showMasteredSetsList;
-  config.showRichPresenceMessage = config.showRichPresenceMessage ? config.showRichPresenceMessage : DEFAULT_CONFIG.showRichPresenceMessage;
-  config.showUserProfile = config.showUserProfile ? config.showUserProfile : DEFAULT_CONFIG.showUserProfile;
   config.username = config.username ? config.username : DEFAULT_CONFIG.username;
-
+  config.sections = config.sections ? config.sections : DEFAULT_CONFIG.sections;
   return config;
+};
+
+/**
+ * Returns the state of the section setting provided or undefined if not found.
+ * @param id The `ConfigCheckbox` setting to retrieve
+ * @param sectionOrder `ISections` array from the state or component props
+ */
+export const getSectionSetting = (id: ConfigCheckboxes, sectionOrder: ISections[]): boolean | undefined => {
+  return sectionOrder.find((section: ISections) => section.text === id)?.checked;
+};
+
+/**
+ * Returns the index for the setting in the `sectionOrder` array
+ * @param id The `ConfigCheckbox` setting to retrieve
+ * @param sectionOrder `ISections` array from the state or component props
+ */
+export const getSectionIndex = (id: ConfigCheckboxes, sectionOrder: ISections[]): number => {
+  return sectionOrder.findIndex((section: ISections) => section.text === id);
 };

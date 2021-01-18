@@ -76,11 +76,6 @@ class App extends React.Component<IAppProps, IAppState> {
       username: config.username,
       apiKey: config.apiKey,
       numAchievementsToShow: config.numAchievementsToShow,
-      showUserProfile: config.showUserProfile,
-      showLastGamePlaying: config.showLastGamePlaying,
-      showRichPresenceMessage: config.showRichPresenceMessage,
-      showRecentAchievementList: config.showRecentAchievementList,
-      showMasteredSetsList: config.showMasteredSetsList,
       showCompletedWithMastered: config.showCompletedWithMastered,
     });
   };
