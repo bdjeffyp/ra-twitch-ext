@@ -1,28 +1,21 @@
 import * as React from "react";
 import "./App.css";
 import { Auth } from "./Auth";
-import { EMPTY_CONFIG } from "./Config";
 import { Main } from "./Main";
+import { DEFAULT_CONFIG, IAppConfig } from "./models";
 import { ITwitchAuth, TwitchExtensionHelper } from "./twitch-ext";
+import { validateConfigOptions } from "./utils";
 
-// Update to reflect the current version on Twitch
-export const APP_VERSION = "0.1.0";
-
-export interface IAppState {
+interface IAppState extends IAppConfig {
   finishedLoading: boolean;
-  username: string;
-  apiKey: string;
-  numAchievementsToShow: number;
+}
+interface IAppProps {
+  nonce: string;
 }
 
-export interface IAppConfig {
-  username: string;
-  apiKey: string;
-  numAchievementsToShow: number;
-}
-
-interface IAppProps {}
-
+/**
+ * Main panel entry point. Responsible for setting up Twitch extension helper and fetching config.
+ */
 class App extends React.Component<IAppProps, IAppState> {
   private _auth: Auth;
   private _twitch: TwitchExtensionHelper | undefined;
@@ -31,11 +24,11 @@ class App extends React.Component<IAppProps, IAppState> {
     super(props);
     this._auth = new Auth();
     this._twitch = window.Twitch ? window.Twitch.ext : undefined;
+
+    // Initialize the state with defaults from DEFAULT_CONFIG
     this.state = {
       finishedLoading: false,
-      username: "",
-      apiKey: "",
-      numAchievementsToShow: 0,
+      ...DEFAULT_CONFIG,
     };
   }
 
@@ -59,13 +52,7 @@ class App extends React.Component<IAppProps, IAppState> {
   }
 
   public render() {
-    return (
-      <div className="App">
-        {this.state.finishedLoading && (
-          <Main username={this.state.username} apiKey={this.state.apiKey} numAchievementsToShow={this.state.numAchievementsToShow} />
-        )}
-      </div>
-    );
+    return <div className="App">{this.state.finishedLoading && <Main {...this.state} />}</div>;
   }
 
   private _updateConfigState = () => {
@@ -79,10 +66,18 @@ class App extends React.Component<IAppProps, IAppState> {
     try {
       config = JSON.parse(rawConfig);
     } catch (error) {
-      config = EMPTY_CONFIG;
+      config = DEFAULT_CONFIG;
     }
 
-    this.setState({ username: config.username, apiKey: config.apiKey, numAchievementsToShow: config.numAchievementsToShow });
+    // Ensure each property of the config is initialized with default values if undefined
+    validateConfigOptions(config);
+
+    this.setState({
+      username: config.username,
+      apiKey: config.apiKey,
+      numAchievementsToShow: config.numAchievementsToShow,
+      showCompletedWithMastered: config.showCompletedWithMastered,
+    });
   };
 }
 

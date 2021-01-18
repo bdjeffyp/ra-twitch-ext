@@ -18,6 +18,7 @@ export enum ApiTargets {
   gameInfoAndProgress = "GameInfoAndUserProgress",
   achieveOnDay = "AchievementsEarnedOnDay",
   achieveBetweenDays = "AchievementsEarnedBetween",
+  userCompletedGames = "UserCompletedGames",
 }
 
 export interface IRecentlyPlayed {
@@ -123,6 +124,27 @@ export interface IUserSummary {
   recentAchievements: IRecentAchievements;
 }
 
+export interface ICompletedGame {
+  hasErrorResponse: boolean;
+  errorMessage: string;
+  /** Name of the console this game is played on */
+  consoleName: string;
+  /** Internal ID for the game on RetroAchievements */
+  gameId: number;
+  /** This game was mastered in Hardcore if `true`. If `false` and `percentWon` is `1.0000`, the set was only completed. */
+  hardcoreMode: boolean;
+  /** Partial URL to the game's image icon. */
+  imageIcon: string;
+  /** Maximum number of achievements that the game has in the set. */
+  maxPossible: number;
+  /** The number of achievements this user has earned for this game. */
+  numAwarded: number;
+  /** The result of `numAwarded / maxPossible`. If `1.0000`, this set is either completed or mastered. */
+  percentWon: number;
+  /** Name of the game */
+  gameTitle: string;
+}
+
 export interface IAchievementResponseData {
   BadgeName: string;
   DateAwarded: string;
@@ -172,6 +194,21 @@ export interface IGetUserSummaryResponseData {
   MemberSince: string;
   LastGameID: string;
   LastActivity: ILastActivityResponseData;
+}
+
+export interface ICompletedGameResponseData {
+  ConsoleName: string;
+  GameID: string;
+  HardcoreMode: string;
+  ImageIcon: string;
+  MaxPossible: string;
+  NumAwarded: string;
+  PctWon: string;
+  Title: string;
+}
+
+export interface IGetUserCompletedGamesResponseData {
+  [id: string]: ICompletedGameResponseData;
 }
 
 export interface IApiProps {
@@ -313,6 +350,47 @@ export class RetroAchievementsApi extends Api {
   public getUserGameProgress = async (gameId: string) => {
     const params = `u=${this._username}&g=${gameId}`;
     return await fetch(this._raUrl(ApiTargets.gameInfoAndProgress, params), this._fetchOptions);
+  };
+
+  public getUserCompletedGames = async (): Promise<ICompletedGame[]> => {
+    const params = `u=${this._username}`;
+    return await this.get<IGetUserCompletedGamesResponseData>(this._raUrl(ApiTargets.userCompletedGames, params))
+      .then((response: AxiosResponse<IGetUserCompletedGamesResponseData>) => {
+        // Validate the response for the invalid apiKey error
+        if ((response.data as unknown) === INVALID_KEY_ERROR) {
+          throw new Error(INVALID_KEY_ERROR);
+        }
+        const data = response.data;
+        const result: ICompletedGame[] = [];
+        // We only need to store the data with PctWin === 1.0000.
+        // If this user is playing in Hardcore mode, each game will have two records in the data.
+        let i = 0;
+        while (i < Object.keys(data).length) {
+          // Verify that this entry is a fully mastered/completed set
+          if (data[i].PctWon === "1.0000") {
+            // Format it
+            const raw = data[i];
+            const formatted = {} as ICompletedGame;
+            formatted.consoleName = raw.ConsoleName;
+            formatted.gameId = parseInt(raw.GameID);
+            formatted.gameTitle = raw.Title;
+            formatted.hardcoreMode = raw.HardcoreMode === "1";
+            formatted.imageIcon = `${RA_URL}${raw.ImageIcon}`;
+            formatted.maxPossible = parseInt(raw.MaxPossible);
+            formatted.numAwarded = parseInt(raw.NumAwarded);
+            formatted.percentWon = parseInt(raw.PctWon);
+            result.push(formatted);
+          } else {
+            // Since the API returns the results sorted by PctWon, once any results are not 1.0000, we can break out of the loop.
+            break;
+          }
+          i++;
+        }
+        return result;
+      })
+      .catch((error: AxiosError) => {
+        return [{ hasErrorResponse: true, errorMessage: error.message }] as ICompletedGame[];
+      });
   };
 
   private _authQueryString = (): string => {

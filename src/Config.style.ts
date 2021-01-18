@@ -1,8 +1,10 @@
-import { ICalloutContentStyles, ITextFieldStyles } from "@fluentui/react";
+import { concatStyleSets, ICalloutContentStyles, ICheckboxStyles, IIconStyles, ITextFieldStyles } from "@fluentui/react";
 import * as React from "react";
 
 const goldColor = "#CC9900";
 const lightBlueColor = "#2C97FA";
+const hoverLightBlueColor = "#005ACE";
+const disabledLightBlueColor = "rgba(44, 151, 250, 0.3)";
 const redWarningColor = "#FF2020";
 const lightGrayColor = "#282c34";
 
@@ -36,10 +38,10 @@ export const labelStyle = (): React.CSSProperties => {
   };
 };
 
-export const oldLabelStyle = (): React.CSSProperties => {
+export const horizontalRuleStyle = (): React.CSSProperties => {
   return {
-    // Add the buffer to the top that the inputs add in order to align the labels with the text boxes
-    paddingTop: "2px",
+    borderColor: lightBlueColor,
+    borderStyle: "solid",
   };
 };
 
@@ -95,17 +97,109 @@ export const calloutQuoteStyle = (): React.CSSProperties => {
   };
 };
 
-export const buttonInputStyle = (): React.CSSProperties => {
-  return {
-    fontSize: "calc(4px + 2vmin)",
-  };
-};
-
 export const linkStyle = (): React.CSSProperties => {
   return {
     color: goldColor,
     textDecorationLine: "none",
     cursor: "pointer",
+  };
+};
+
+export const sectionContainerStyle = (opacity: number): React.CSSProperties => {
+  return {
+    backgroundColor: "#1b1e24",
+    border: "1px solid black",
+    borderRadius: "3px",
+    padding: "0.5em",
+    margin: "5px 0",
+    maxWidth: "300px",
+    opacity: opacity,
+  };
+};
+
+export const emulatedStackStyle = (): React.CSSProperties => {
+  return {
+    display: "flex",
+    flexFlow: "row nowrap",
+    width: "auto",
+    height: "auto",
+    boxSizing: "border-box",
+  };
+};
+
+export const dragHandleStyle = (isDragging: boolean): Partial<IIconStyles> => {
+  return {
+    root: {
+      width: "1rem",
+      height: "1rem",
+      fontSize: "1rem",
+      cursor: isDragging ? "grabbing" : "grab",
+      display: "flex",
+      alignSelf: "center",
+    },
+  };
+};
+
+export const childOfStyle = (): Partial<IIconStyles> => {
+  return {
+    root: {
+      width: "1rem",
+      height: "1rem",
+      fontSize: "1rem",
+      marginLeft: "1rem",
+      cursor: "default",
+    },
+  };
+};
+
+export const checkboxStyle = (checked: boolean, disabled?: boolean, childCheckbox?: boolean): Partial<ICheckboxStyles> => {
+  return {
+    checkbox: [
+      !checked && !disabled && { borderColor: lightBlueColor },
+      !checked && disabled && { borderColor: disabledLightBlueColor },
+      checked && disabled && { borderColor: disabledLightBlueColor, backgroundColor: disabledLightBlueColor },
+    ],
+    text: [disabled && { color: disabledLightBlueColor }, !disabled && { color: lightBlueColor }],
+    root: [
+      childCheckbox && { marginLeft: "3px" },
+      !childCheckbox && { marginLeft: "0.5em" },
+      {
+        display: "inline-flex",
+      },
+      !disabled && {
+        // eslint-disable-next-line
+        [":hover .ms-Checkbox-text"]: { color: hoverLightBlueColor },
+      },
+      disabled && {
+        // eslint-disable-next-line
+        [":hover .ms-Checkbox-text"]: { color: disabledLightBlueColor },
+      },
+      !checked &&
+        !disabled && {
+          // eslint-disable-next-line
+          [":hover .ms-Checkbox-checkbox"]: { borderColor: hoverLightBlueColor },
+        },
+      !checked &&
+        disabled && {
+          // eslint-disable-next-line
+          [":hover .ms-Checkbox-checkbox"]: { borderColor: disabledLightBlueColor },
+        },
+    ],
+  };
+};
+
+export const completedSetsCheckboxStyle = (checked: boolean): Partial<ICheckboxStyles> => {
+  const updatedStyle: Partial<ICheckboxStyles> = {
+    root: {
+      alignSelf: "center",
+    },
+  };
+  return concatStyleSets(updatedStyle, checkboxStyle(checked));
+};
+
+export const buttonInputStyle = (): React.CSSProperties => {
+  return {
+    fontSize: "calc(4px + 2vmin)",
   };
 };
 
