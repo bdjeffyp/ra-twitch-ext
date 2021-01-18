@@ -14,9 +14,9 @@ interface IDraggableSectionProps {
   /** Initial index that the card is located in the section order array */
   initialIndex: number;
   /** Handle section card movement in the list */
-  moveCard: (id: string, to: number) => void;
+  moveCard?: (id: string, to: number) => void;
   /** Handle retrieving card index based on the ID */
-  findCard: (id: string) => { index: number };
+  findCard?: (id: string) => { index: number };
 }
 
 /**
@@ -33,10 +33,10 @@ export const DraggableSection: React.FC<IDraggableSectionProps> = (props: IDragg
       opacity: monitor.isDragging() ? 0.4 : 1,
     }),
     end: (_, monitor: DragSourceMonitor) => {
-      const { id: droppedId, originalIndex } = monitor.getItem();
+      // const { id: droppedId, originalIndex } = monitor.getItem();
       const didDrop = monitor.didDrop();
       if (!didDrop) {
-        props.moveCard(droppedId, originalIndex);
+        // props.moveCard(droppedId, originalIndex);
       }
     },
   });
@@ -46,8 +46,8 @@ export const DraggableSection: React.FC<IDraggableSectionProps> = (props: IDragg
     canDrop: () => false,
     hover({ text: draggedId }: ISections) {
       if (draggedId !== id) {
-        const { index: overIndex } = props.findCard(id);
-        props.moveCard(draggedId, overIndex);
+        // const { index: overIndex } = props.findCard(id);
+        // props.moveCard(draggedId, overIndex);
       }
     },
   });

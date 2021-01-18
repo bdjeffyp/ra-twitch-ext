@@ -201,29 +201,40 @@ export class Config extends React.Component<IConfigProps, IConfigState> {
           {/* Configure panel appearance with drag and drop sections */}
           {sections && (
             <DndProvider backend={HTML5Backend}>
+              Select the sections you want to display on the panel.
+              <br />
+              <b>Coming soon:</b> drag and drop to change the order of the sections!
               <DraggableSection
                 id={sections[userProfileIndex].text}
                 sectionCard={sections[userProfileIndex]}
                 renderCheckbox={this._renderCheckbox}
                 initialIndex={userProfileIndex}
+                // moveCard={this._moveSectionCard}
+                // findCard={this._findSectionCard}
               />
               <DraggableSection
                 id={sections[lastGameIndex].text}
                 sectionCard={sections[lastGameIndex]}
                 renderCheckbox={this._renderCheckbox}
                 initialIndex={lastGameIndex}
+                // moveCard={this._moveSectionCard}
+                // findCard={this._findSectionCard}
               />
               <DraggableSection
                 id={sections[recentAchievementsIndex].text}
                 sectionCard={sections[recentAchievementsIndex]}
                 renderCheckbox={this._renderCheckbox}
                 initialIndex={recentAchievementsIndex}
+                // moveCard={this._moveSectionCard}
+                // findCard={this._findSectionCard}
               />
               <DraggableSection
                 id={sections[masteredSetsIndex].text}
                 sectionCard={sections[masteredSetsIndex]}
                 renderCheckbox={this._renderCheckbox}
                 initialIndex={masteredSetsIndex}
+                // moveCard={this._moveSectionCard}
+                // findCard={this._findSectionCard}
               />
             </DndProvider>
           )}
@@ -371,8 +382,10 @@ export class Config extends React.Component<IConfigProps, IConfigState> {
   };
 
   private _onCheckChanged = (configItem: ConfigCheckboxes) => {
+    console.log(`I'm clicked! ${configItem}`);
     switch (configItem) {
       case ConfigCheckboxes.userProfile:
+        console.log(`Initial state: ${this.state.showUserProfile}`);
         this.setState({ showUserProfile: !this.state.showUserProfile });
         break;
       case ConfigCheckboxes.lastGamePlaying:
@@ -468,11 +481,15 @@ export class Config extends React.Component<IConfigProps, IConfigState> {
   };
 
   private _findSectionCard = (id: string) => {
-    const card = this.state.sections.filter((section: ISections) => section.text === id)[0];
-    return { card, index: this.state.sections.indexOf(card) };
+    // const card = this.state.sections.filter((section: ISections) => section.text === id)[0];
+    // return { card, index: this.state.sections.indexOf(card) };
   };
 
   private _moveSectionCard = (id: string, atIndex: number) => {
-    const { card, index } = this._findSectionCard(id);
+    //   const { card, index } = this._findSectionCard(id);
+    //   let updateSections = this.state.sections;
+    //   updateSections = updateSections.splice(index, 1);
+    //   updateSections = updateSections.splice(atIndex, 0, card);
+    //   this.setState({ sections: updateSections });
   };
 }
